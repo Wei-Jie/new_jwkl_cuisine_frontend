@@ -1,0 +1,665 @@
+/* ========================================================
+   小灶私廚 (NEW_JWKL_CUISINE) 全域設計系統 & 移動端優化樣式
+   Aesthetic Style: 清新亮藍、毛玻璃、移動端觸控友善、圓角卡片
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+:root {
+  /* 品牌色彩變數 - 方案 1：琥珀焦糖系 (溫馨明亮烘焙風) */
+  --color-bg: #fcfbf7;               /* 溫潤陶瓷米白背景 */
+  --color-surface: #ffffff;          /* 純白卡片與表單 */
+  --color-border: #e7e5e4;           /* stone-200 溫和暖邊框 */
+  --color-border-hover: #d6d3d1;     /* stone-300 */
+  
+  --color-primary: #d97706;          /* 琥珀焦糖橙 (方案一主色) */
+  --color-primary-hover: #b45309;    /* 焦糖深褐 Hover */
+  --color-primary-light: #fef3c7;    /* 蜂蜜淡黃選中背景 */
+  
+  --color-success: #16a34a;          /* 成功綠 */
+  --color-success-light: #f0fdf4;
+  
+  --color-warning: #ca8a04;          /* 警告黃 (深芥末黃) */
+  --color-warning-light: #fef9c3;
+  
+  --color-danger: #dc2626;           /* 危險紅 */
+  --color-danger-light: #fee2e2;
+  
+  --color-text: #1c1917;             /* 炭燒深石褐文字 (stone-900) */
+  --color-text-secondary: #57534e;   /* 溫和石褐副文字 (stone-600) */
+  --color-text-muted: #a8a29e;       /* stone-400 */
+  
+  /* 圓角與陰影 */
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  
+  --shadow-sm: 0 1px 3px rgba(41,37,36,0.06);  /* 帶暖意微陰影 */
+  --shadow: 0 4px 16px rgba(41,37,36,0.06);
+  --shadow-lg: 0 12px 36px rgba(41,37,36,0.1);
+  
+  /* 動畫與導覽高度 */
+  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --nav-height: 64px;
+}
+
+/* 全域重置 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent; /* 消除移動端點擊時的藍色高亮 */
+}
+
+body {
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* 防止移動端左右溢出晃動 */
+}
+
+/* 按鈕點擊大熱區 - 手機觸控友善 */
+button, a, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input, select, textarea {
+  outline: none;
+}
+
+/* ========================================================
+   響應式排版與移動端微調 (Mobile-First / RWD)
+   ======================================================== */
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.main-layout {
+  padding-top: calc(var(--nav-height) + 16px);
+  padding-bottom: 80px; /* 為移動端底部的固定購物車保留高度 */
+}
+
+/* 讓標題在手機上字體合適 */
+h1 { font-size: 28px; font-weight: 700; color: var(--color-text); }
+h2 { font-size: 22px; font-weight: 700; color: var(--color-text); }
+h3 { font-size: 17px; font-weight: 600; color: var(--color-text); }
+
+@media (max-width: 768px) {
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 15px; }
+  .main-layout {
+    padding-top: calc(var(--nav-height) + 10px);
+    padding-bottom: 96px; /* 手機版底部購物車更大，保留更多高度 */
+  }
+}
+
+/* ========================================================
+   通用卡片 (Card Styles)
+   ======================================================== */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.card:hover {
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm); /* 手機版圓角微調，空間利用更佳 */
+  }
+}
+
+/* ========================================================
+   移動端專屬：大拇指友善按鈕 (Thumb-Friendly Buttons)
+   ======================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px; /* 手機友善大高度 */
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition);
+  white-space: nowrap;
+  user-select: none;
+  min-height: 48px; /* 完美符合 Apple/Google 48px 手指觸碰熱區規範 */
+}
+
+.btn:active {
+  transform: scale(0.96); /* 手機點擊實體縮小回饋感 */
+  opacity: 0.9;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  border-color: var(--color-primary);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+.btn-secondary:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-outline:hover {
+  background-color: var(--color-primary-light);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+.btn-danger:hover {
+  background-color: #b52a1d;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  min-height: 38px; /* 小按鈕也有好點擊區 */
+}
+
+@media (max-width: 768px) {
+  .btn {
+    width: 100%; /* 在手機版，表單按鈕預設滿版，方便大拇指單手操作 */
+  }
+  .btn-sm {
+    width: auto; /* 手機版小按鈕不強制滿版 */
+  }
+}
+
+/* ========================================================
+   移動端表單元素 (Mobile Form Elements)
+   ======================================================= */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.form-control {
+  padding: 12px 14px; /* 加大手機點擊區域與輸入框高度 */
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 15px; /* 防止 iOS 瀏覽器在 focus 時自動放大畫面 (小於16px會放大) */
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition: all var(--transition);
+  width: 100%;
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+
+/* ========================================================
+   移動端橫向滾動分類導航 (Horizontally Scrollable Nav)
+   ======================================================= */
+.scroll-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0 12px 0;
+  -webkit-overflow-scrolling: touch; /* iOS 絲滑滾動 */
+  scrollbar-width: none; /* Firefox 隱藏滾動條 */
+}
+
+.scroll-nav::-webkit-scrollbar {
+  display: none; /* Chrome/Safari 隱藏滾動條 */
+}
+
+.scroll-btn {
+  flex: 0 0 auto; /* 防止按鈕被壓縮變形 */
+  padding: 10px 20px;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 30px; /* 圓滾滾的膠囊圖卡按鈕，超好點選 */
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.scroll-btn.active {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ========================================================
+   移動端卡片化表格設計 (Card-Based Table for Mobile)
+   ======================================================= */
+.responsive-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 1200px; /* 確保寬度不足時觸發橫向滾動，防止欄位被擠壓或裁切 */
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.schedule-table {
+  min-width: auto !important; /* 消除排單表格 the 1200px 最小寬度限制，以自適應容器寬度防裁切 */
+  width: 100% !important;
+}
+
+.menu-table {
+  min-width: auto !important; /* 消除菜單品項表格的 1200px 最小寬度限制，以自適應容器寬度防裁切 */
+  width: 100% !important;
+}
+
+.expense-table {
+  min-width: auto !important; /* 消除記帳表格的 1200px 最小寬度限制，以自適應容器寬度防裁切 */
+  width: 100% !important;
+}
+
+.inventory-table {
+  min-width: auto !important; /* 消除庫存表格的 1200px 最小寬度限制，以自適應容器寬度防裁切 */
+  width: 100% !important;
+}
+
+/* 庫存管理頁面：頂部雙圖卡並排布局 */
+.inventory-top-row {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr; /* 說明卡片略寬，版面更協調 */
+  gap: 20px;
+  align-items: stretch; /* 讓左右兩個卡片高度完全等高，更加精緻順眼 */
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .inventory-top-row {
+    grid-template-columns: 1fr; /* 小螢幕/平板/手機 自動回歸上下垂直排版 */
+    gap: 16px;
+  }
+}
+
+.admin-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* 當螢幕小於 768px 時，表格自動卡片化！(超酷的移動端優化) */
+@media (max-width: 768px) {
+  /* 1. 徹底消除手機版表格的 1200px 最小寬度限制，防止溢出與水平滾動 */
+  .admin-table {
+    min-width: auto !important;
+    width: 100% !important;
+  }
+  
+  .admin-table, .admin-table thead, .admin-table tbody, .admin-table th, .admin-table td, .admin-table tr {
+    display: block; /* 徹底打破 table 結構 */
+  }
+  
+  .admin-table thead {
+    display: none; /* 隱藏傳統表頭 */
+  }
+  
+  /* 2. 重構 tr 為精美圖卡 (比照庫存圖卡設計) */
+  .admin-table tr {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-primary) !important; /* 左側橘黃色主題粗邊條 */
+    border-radius: var(--radius);
+    padding: 12px 14px; /* 緊湊內距 */
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    transition: all var(--transition);
+  }
+  
+  .admin-table tr:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px); /* 輕微懸浮動態回饋 */
+  }
+  
+  /* 3. td 改用靈活的 flex 排版，拉開左右兩端 (縮小上下 padding 以緊縮行距) */
+  .admin-table td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0 !important; /* 縮小行距 */
+    border-bottom: 1px dashed #f1f5f9;
+    text-align: right;
+    min-height: 30px; /* 緊湊高度 */
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  
+  /* 移除最後一行的虛線分隔 */
+  .admin-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0 !important;
+    margin-top: 4px;
+  }
+  
+  /* 4. 左側 Label 樣式優化 (粗體、文字色加深並標註冒號) */
+  .admin-table td::before {
+    content: attr(data-label) "："; /* 加上冒號引導 */
+    font-weight: 800 !important; /* 強制超粗體標註 */
+    color: #000000 !important; /* 強制純黑提升視覺對比 */
+    text-align: left;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  
+  /* 5. 卡片關鍵標題行 (商品名稱/訂單號) 視覺強化 */
+  .admin-table td[data-label="商品名稱"],
+  .admin-table td[data-label="訂單號"] {
+    border-bottom: 1.5px solid var(--color-border);
+    padding-bottom: 6px !important; /* 縮小內距 */
+    margin-bottom: 6px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  
+  /* 針對標頭行，讓標題文字顏色更明顯 */
+  .admin-table td[data-label="商品名稱"] strong,
+  .admin-table td[data-label="訂單號"] strong {
+    color: var(--color-primary);
+  }
+  
+  /* 6. 備註與商品描述長文字欄位改為垂直排列且靠左對齊 (優化長文閱讀體驗，並縮小間距) */
+  .admin-table td[data-label="備註"],
+  .admin-table td[data-label="商品描述"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    padding: 3px 0 !important; /* 縮小行距 */
+  }
+  
+  .admin-table td[data-label="備註"]::before,
+  .admin-table td[data-label="商品描述"]::before {
+    margin-bottom: 2px;
+    margin-right: 0 !important;
+  }
+}
+
+/* ========================================================
+   動畫特效
+   ======================================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ========================================================
+   Toast 通知樣式
+   ======================================================= */
+.toast-container {
+  position: fixed;
+  bottom: 84px; /* 為移動端底欄留出空間 */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 90%;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background-color: #334155;
+  color: #ffffff;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+  width: 100%;
+}
+
+.toast-item.success { background-color: var(--color-success); }
+.toast-item.error { background-color: var(--color-danger); }
+.toast-item.warning { background-color: var(--color-warning); color: #3c2e00; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ========================================================
+   [最新優化] 後台統計卡片與 Select 下拉選單修復
+   ======================================================= */
+
+/* 下拉選單字元擠扁重合強力修復 */
+select, select.form-control {
+  letter-spacing: normal !important;
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  text-align: left !important;
+  text-align-last: left !important;
+  word-spacing: normal !important;
+  
+  /* [解決截斷與重疊核心] 縮減上下 padding，釋放內容區高度 */
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  line-height: 1.5 !important;
+  height: 38px !important;
+  box-sizing: border-box !important;
+}
+
+/* 後台統計卡片區 */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: row; /* 水平並排，不要換行 */
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all var(--transition);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.stat-card-warning {
+  border-left: 5px solid var(--color-warning);
+  background: linear-gradient(135deg, var(--color-warning-light) 0%, #ffffff 100%);
+}
+
+.stat-card-success {
+  border-left: 5px solid var(--color-success);
+  background: linear-gradient(135deg, var(--color-success-light) 0%, #ffffff 100%);
+}
+
+/* 營收卡片：移除左側藍色直條 */
+.stat-card-primary {
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, #ffffff 100%);
+  border: 1px solid var(--color-primary-light);
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .stat-card {
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* ========================================================
+   [最新優化] Modal 彈窗樣式 (磨砂毛玻璃 & 精緻陰影)
+   ======================================================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.4); /* 深色半透明底 */
+  backdrop-filter: blur(8px);               /* 優雅毛玻璃 */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-container {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--color-border);
+  margin-bottom: 16px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+
+.modal-close:hover {
+  background-color: #f1f5f9;
+  color: var(--color-danger);
+}
+
+@keyframes modalScaleUp {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ========================================================
+   [最新優化] 表單控制項微縮版 (.form-control-sm) & select 內距修復
+   ======================================================= */
+.form-control-sm {
+  padding: 6px 10px !important;
+  font-size: 13.5px !important;
+  height: 32px !important;
+  border-radius: var(--radius-sm) !important;
+  box-sizing: border-box !important;
+}
+
+select.form-control-sm {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-left: 8px !important;
+  padding-right: 22px !important; /* 保留下拉箭頭空間 */
+  height: 32px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}

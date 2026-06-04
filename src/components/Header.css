@@ -1,0 +1,181 @@
+/* ========================================================
+   小灶私廚毛玻璃導覽列 (Header) 樣式表
+   Aesthetic: 磨砂玻璃 (Glassmorphism), 橫滾動響應式, 計數 Bounce 動效
+   ======================================================== */
+
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background: #fcfbf7; /* 溫潤陶瓷米白 (改為 100% 完全不透明，根治背後元素透色與陰影問題) */
+    border-bottom: 1px solid rgba(217, 119, 6, 0.14); /* 焦糖橙柔和邊框 */
+    z-index: 900;
+    box-shadow: 0 2px 8px rgba(41, 37, 36, 0.05); /* 微調精緻投影 */
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    gap: 20px;
+}
+
+/* 品牌標誌 */
+.brand-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.brand-logo {
+    color: var(--color-primary);
+}
+
+.brand-name {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--color-text);
+}
+
+/* 橫向導航 - 手機版自動轉換為橫滑 */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
+}
+
+.header-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-link-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.nav-link-btn:hover {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+.nav-link-btn.active {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.admin-quick-link {
+    color: var(--color-success);
+    font-weight: 600;
+}
+
+.admin-quick-link:hover {
+    background-color: var(--color-success-light);
+    color: var(--color-success);
+}
+
+/* 購物車觸發器 */
+.header-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.header-cart-trigger {
+    position: relative;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    box-shadow: 0 2px 10px rgba(217, 119, 6, 0.16);
+}
+
+.header-cart-trigger:hover {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+.header-cart-trigger:active {
+    transform: scale(0.95);
+}
+
+/* 購物車 Bounce 計數氣泡 */
+.cart-badge-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: var(--color-danger);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(217, 48, 37, 0.3);
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+.animate-bounce {
+    animation: bounce 1.8s infinite;
+}
+
+/* ========================================================
+   移動端響應式微調 (橫滑導覽列自動生效)
+   ======================================================== */
+@media (max-width: 768px) {
+    .header-container {
+        gap: 12px;
+        padding: 0 12px;
+    }
+    
+    .brand-name {
+        display: none; /* 手機版隱藏文字標誌，只留小圖標，挪出空間給導覽列 */
+    }
+
+    .header-nav {
+        flex: 1; /* 佔滿剩餘空間 */
+        mask-image: linear-gradient(to right, black 85%, transparent 100%); /* 遮罩漸變暗示有更多內容 */
+        -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+
+    .nav-link-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
