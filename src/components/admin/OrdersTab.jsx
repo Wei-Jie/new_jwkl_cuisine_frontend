@@ -50,8 +50,8 @@ export default function OrdersTab({
                         <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>下單開始日期</label>
                         <input 
                             type="date" 
-                            className="input" 
-                            style={{ width: '100%', minHeight: '38px' }}
+                            className="form-control" 
+                            style={{ width: '100%', height: '38px', padding: '6px 12px', borderRadius: 'var(--radius)' }}
                             value={localStartDate}
                             onChange={(e) => setLocalStartDate(e.target.value)}
                         />
@@ -60,8 +60,8 @@ export default function OrdersTab({
                         <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>下單結束日期</label>
                         <input 
                             type="date" 
-                            className="input" 
-                            style={{ width: '100%', minHeight: '38px' }}
+                            className="form-control" 
+                            style={{ width: '100%', height: '38px', padding: '6px 12px', borderRadius: 'var(--radius)' }}
                             value={localEndDate}
                             onChange={(e) => setLocalEndDate(e.target.value)}
                         />
@@ -69,8 +69,8 @@ export default function OrdersTab({
                     <div style={{ flex: '1 1 180px' }}>
                         <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>訂單狀態</label>
                         <select 
-                            className="input" 
-                            style={{ width: '100%', minHeight: '38px' }}
+                            className="form-control" 
+                            style={{ width: '100%', height: '38px', padding: '6px 12px', borderRadius: 'var(--radius)' }}
                             value={localStatus}
                             onChange={(e) => setLocalStatus(e.target.value)}
                         >
