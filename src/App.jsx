@@ -58,7 +58,7 @@ function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmount, activeSect
                 
                 // 1. 獲取商品列表
                 try {
-                    const resMenu = await fetch('/api/v1/menus', config);
+                    const resMenu = await customFetch('/api/v1/menus', config);
                     if (resMenu.ok) {
                         const dataMenu = await resMenu.json();
                         const normalized = dataMenu.map(m => ({
@@ -77,7 +77,7 @@ function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmount, activeSect
 
                 // 2. 獲取常見問題
                 try {
-                    const resFaq = await fetch('/api/v1/faqs', config);
+                    const resFaq = await customFetch('/api/v1/faqs', config);
                     if (resFaq.ok) {
                         const dataFaq = await resFaq.json();
                         if (dataFaq && dataFaq.length > 0) {
@@ -94,7 +94,7 @@ function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmount, activeSect
 
                 // 3. 獲取系統配置
                 try {
-                    const resConfigs = await fetch('/api/v1/system-configs', config);
+                    const resConfigs = await customFetch('/api/v1/system-configs', config);
                     if (resConfigs.ok) {
                         const dataConfigs = await resConfigs.json();
                         const ann = dataConfigs.find(c => c.configKey === 'SHOP_ANNOUNCEMENT');
@@ -413,7 +413,7 @@ function CustomerTrack() {
                     'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
                 }
             };
-            const res = await fetch(`/api/v1/orders/track?phone=${phone}&orderId=${orderId}`, config);
+            const res = await customFetch(`/api/v1/orders/track?phone=${phone}&orderId=${orderId}`, config);
             if (res.ok) {
                 const data = await res.json();
                 const orderObj = data.order || {};
@@ -613,6 +613,12 @@ const isEmptyValue = (val) => {
     return s === '' || s === '-' || s === '無' || s === '無資料' || s === 'none';
 };
 
+const customFetch = (url, options) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const targetUrl = (url && url.startsWith('/api')) ? `${baseUrl}${url}` : url;
+    return fetch(targetUrl, options);
+};
+
 // ==========================================
 // 3. 管理員後台入口 (Admin Portal Page - Protected)
 // ==========================================
@@ -661,7 +667,7 @@ function AdminPortal() {
         setIsOrdersLoading(true);
         try {
             const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-            const res = await fetch('/api/v1/orders/all', config);
+            const res = await customFetch('/api/v1/orders/all', config);
             if (res.ok) {
                 const data = await res.json();
                 const normalized = data.map(o => ({
@@ -897,7 +903,7 @@ function AdminPortal() {
                 body: JSON.stringify(itemsPayload)
             };
             
-            const itemsRes = await fetch(`/api/v1/orders/${editingOrder.order_id}/items`, itemsConfig);
+            const itemsRes = await customFetch(`/api/v1/orders/${editingOrder.order_id}/items`, itemsConfig);
             if (!itemsRes.ok) {
                 const errText = await itemsRes.text();
                 throw new Error(errText || '更新訂單品項明細失敗');
@@ -912,7 +918,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(backendPayload)
             };
-            const res = await fetch(`/api/v1/orders/${editingOrder.order_id}`, config);
+            const res = await customFetch(`/api/v1/orders/${editingOrder.order_id}`, config);
             if (res.ok) {
                 alert('訂單資訊與品項排程更新成功！');
                 setShowEditOrderModal(false);
@@ -955,7 +961,7 @@ function AdminPortal() {
                 method: 'PUT',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            const res = await fetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已接單')}`, config);
+            const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已接單')}`, config);
             if (res.ok) {
                 alert(`訂單 ${orderId} 接單成功！`);
                 fetchOrders();
@@ -975,7 +981,7 @@ function AdminPortal() {
                 method: 'PUT',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            const res = await fetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已退回')}`, config);
+            const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已退回')}`, config);
             if (res.ok) {
                 alert(`訂單 ${orderId} 已退回！`);
                 fetchOrders();
@@ -996,7 +1002,7 @@ function AdminPortal() {
         setIsOrderItemsLoading(true);
         try {
             const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-            const res = await fetch('/api/v1/orders/items/all', config);
+            const res = await customFetch('/api/v1/orders/items/all', config);
             if (res.ok) {
                 const data = await res.json();
                 setOrderItems(data);
@@ -1105,7 +1111,7 @@ function AdminPortal() {
         setIsMenuLoading(true);
         try {
             const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-            const res = await fetch('/api/v1/menus/all', config);
+            const res = await customFetch('/api/v1/menus/all', config);
             const data = await res.json();
             const normalized = data.map(m => ({
                 ...m,
@@ -1144,7 +1150,7 @@ function AdminPortal() {
                 method: 'POST',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            const res = await fetch(`/api/v1/menus/${selectedInvProduct}/stock/add?qty=${invAddQty}`, config);
+            const res = await customFetch(`/api/v1/menus/${selectedInvProduct}/stock/add?qty=${invAddQty}`, config);
             if (res.ok) {
                 alert('商品入庫登記成功！');
                 setSelectedInvProduct('');
@@ -1168,7 +1174,7 @@ function AdminPortal() {
                 method: 'PUT',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            const res = await fetch(`/api/v1/menus/${productId}/stock?stock=${currentStock}&isStockManaged=${isManaged}`, config);
+            const res = await customFetch(`/api/v1/menus/${productId}/stock?stock=${currentStock}&isStockManaged=${isManaged}`, config);
             if (res.ok) {
                 alert('庫存盤點與管理設定更新成功！');
                 fetchMenuList();
@@ -1201,7 +1207,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(payload)
             };
-            const res = await fetch('/api/v1/menus/stock/batch', config);
+            const res = await customFetch('/api/v1/menus/stock/batch', config);
             if (res.ok) {
                 alert('📦 批次庫存與管理設定儲存成功！');
                 fetchMenuList();
@@ -1221,7 +1227,7 @@ function AdminPortal() {
         setIsExpensesLoading(true);
         try {
             const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-            const res = await fetch('/api/v1/expenses', config);
+            const res = await customFetch('/api/v1/expenses', config);
             const data = await res.json();
             const normalized = data.map(e => ({
                 ...e,
@@ -1291,7 +1297,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(backendPayload)
             };
-            await fetch('/api/v1/menus', config);
+            await customFetch('/api/v1/menus', config);
             alert('上架狀態變更成功！');
             fetchMenuList();
         } catch (err) {
@@ -1330,7 +1336,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(backendPayload)
             };
-            await fetch('/api/v1/menus', config);
+            await customFetch('/api/v1/menus', config);
             alert('商品資訊更新成功！');
             setShowEditMenuModal(false);
             fetchMenuList();
@@ -1372,7 +1378,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(backendPayload)
             };
-            await fetch('/api/v1/menus', config);
+            await customFetch('/api/v1/menus', config);
             alert('全新商品新增成功！');
             setShowAddMenuModal(false);
             setNewMenuForm({
@@ -1434,7 +1440,7 @@ function AdminPortal() {
                 },
                 body: JSON.stringify(payload)
             };
-            await fetch('/api/v1/expenses', config);
+            await customFetch('/api/v1/expenses', config);
             alert('支出成本記帳成功！');
             setExpenseForm({
                 expenseDate: new Date().toISOString().split('T')[0],
@@ -1474,7 +1480,7 @@ function AdminPortal() {
                 method: 'DELETE',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            await fetch(`/api/v1/expenses/${id}`, config);
+            await customFetch(`/api/v1/expenses/${id}`, config);
             alert('支出明細刪除成功！');
             fetchExpenses();
         } catch (err) {
@@ -1488,7 +1494,7 @@ function AdminPortal() {
         setIsConfigsLoading(true);
         const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
         try {
-            const resConf = await fetch('/api/v1/system-configs', config);
+            const resConf = await customFetch('/api/v1/system-configs', config);
             if (resConf.ok) {
                 const data = await resConf.json();
                 const ann = data.find(c => c.configKey === 'SHOP_ANNOUNCEMENT');
@@ -1505,7 +1511,7 @@ function AdminPortal() {
         }
 
         try {
-            const resFaq = await fetch('/api/v1/faqs', config);
+            const resFaq = await customFetch('/api/v1/faqs', config);
             if (resFaq.ok) {
                 const data = await resFaq.json();
                 setFaqList(data);
@@ -1537,7 +1543,7 @@ function AdminPortal() {
                     description: '前台首頁跑馬燈系統公告'
                 })
             };
-            await fetch('/api/v1/system-configs', config);
+            await customFetch('/api/v1/system-configs', config);
             alert('系統跑馬燈公告儲存成功！');
         } catch (err) {
             alert('系統跑馬燈公告儲存成功！(本地安全回退)');
@@ -1558,7 +1564,7 @@ function AdminPortal() {
                     description: '前台首頁關於我們介紹'
                 })
             };
-            await fetch('/api/v1/system-configs', config);
+            await customFetch('/api/v1/system-configs', config);
             alert('關於我們介紹儲存成功！');
         } catch (err) {
             alert('關於我們介紹儲存成功！(本地安全回退)');
@@ -1578,7 +1584,7 @@ function AdminPortal() {
                 body: JSON.stringify(faqPayload)
             };
             const url = editingFaqId ? `/api/v1/faqs/${editingFaqId}` : '/api/v1/faqs';
-            const res = await fetch(url, config);
+            const res = await customFetch(url, config);
             if (!res.ok) throw new Error('儲存失敗');
             alert('常見問題儲存成功！');
             setShowAddFaqModal(false);
@@ -1605,7 +1611,7 @@ function AdminPortal() {
                 method: 'DELETE',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            await fetch(`/api/v1/faqs/${id}`, config);
+            await customFetch(`/api/v1/faqs/${id}`, config);
             alert('常見問題刪除成功！');
             fetchAdminConfigsAndFaqs();
         } catch (err) {
@@ -1633,7 +1639,7 @@ function AdminPortal() {
         const fetchMenu = async () => {
             try {
                 const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-                const res = await fetch('/api/v1/menus', config);
+                const res = await customFetch('/api/v1/menus', config);
                 const data = await res.json();
                 const names = [...new Set(data.map(m => m.name).filter(Boolean))].sort();
                 setScheduleMenu(names);
@@ -1652,7 +1658,7 @@ function AdminPortal() {
         try {
             const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
             const promises = pNames.map(async (name) => {
-                const res = await fetch(`/api/v1/orders/items/by-product?productName=${encodeURIComponent(name)}`, config);
+                const res = await customFetch(`/api/v1/orders/items/by-product?productName=${encodeURIComponent(name)}`, config);
                 if (res.ok) {
                     return await res.json();
                 }
@@ -1780,7 +1786,7 @@ function AdminPortal() {
             };
 
             await Promise.all(Object.keys(groups).map(status => {
-                return fetch('/api/v1/orders/items/batch-status', {
+                return customFetch('/api/v1/orders/items/batch-status', {
                     ...config,
                     body: JSON.stringify({
                         ids: groups[status],
@@ -1814,7 +1820,7 @@ function AdminPortal() {
                     description: '關於我們介紹第一段'
                 })
             };
-            await fetch('/api/v1/system-configs', config);
+            await customFetch('/api/v1/system-configs', config);
             alert('關於我們第一段儲存成功！');
         } catch (e) {
             alert('關於我們第一段儲存成功！(本地安全回退)');
@@ -1835,7 +1841,7 @@ function AdminPortal() {
                     description: '關於我們介紹第二段'
                 })
             };
-            await fetch('/api/v1/system-configs', config);
+            await customFetch('/api/v1/system-configs', config);
             alert('關於我們第二段儲存成功！');
         } catch (e) {
             alert('關於我們第二段儲存成功！(本地安全回退)');
@@ -3834,7 +3840,7 @@ export default function App() {
                 },
                 body: JSON.stringify(orderData)
             };
-            const res = await fetch('/api/v1/orders', config);
+            const res = await customFetch('/api/v1/orders', config);
             const data = await res.json();
             
             if (data.status === 'success') {
