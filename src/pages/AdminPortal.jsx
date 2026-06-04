@@ -57,6 +57,20 @@ export default function AdminPortal() {
     const [showEditOrderModal, setShowEditOrderModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
     const [editingOrderItems, setEditingOrderItems] = useState([]);
+    const [filterStartDate, setFilterStartDate] = useState(() => {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = today.getMonth();
+        return `${y}-${String(m + 1).padStart(2, '0')}-01`;
+    });
+    const [filterEndDate, setFilterEndDate] = useState(() => {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = today.getMonth();
+        const lastDay = new Date(y, m + 1, 0).getDate();
+        return `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    });
+    const [filterStatus, setFilterStatus] = useState('全部');
 
     // ==========================================
     // 4. 訂單商品細項狀態 (統計與排單使用)
@@ -150,6 +164,47 @@ export default function AdminPortal() {
             }
         } catch (err) {
             console.log("無法獲取真實訂單，保留預設資料");
+        } finally {
+            setIsOrdersLoading(false);
+        }
+    };
+
+    const fetchOrdersWithFilters = async (statusVal = filterStatus, startVal = filterStartDate, endVal = filterEndDate) => {
+        setIsOrdersLoading(true);
+        try {
+            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const params = new URLSearchParams();
+            if (statusVal && statusVal !== '全部') {
+                params.append('status', statusVal);
+            }
+            if (startVal) {
+                params.append('startDate', startVal);
+            }
+            if (endVal) {
+                params.append('endDate', endVal);
+            }
+            const res = await customFetch(`/api/v1/orders/search?${params.toString()}`, config);
+            if (res.ok) {
+                const data = await res.json();
+                const normalized = data.map(o => ({
+                    ...o,
+                    order_id: o.orderId || o.order_id,
+                    customer_name: o.customerName || o.customer_name,
+                    order_date: o.orderDate || o.order_date,
+                    delivery_date: o.deliveryDate || o.delivery_date,
+                    payment_status: o.paymentStatus || o.payment_status,
+                    payment_date: o.paymentDate || o.payment_date,
+                    line_id: o.lineId || o.line_id
+                }));
+                normalized.sort((a, b) => {
+                    const numA = parseInt(String(a.order_id).replace(/\D/g, ''), 10) || 0;
+                    const numB = parseInt(String(b.order_id).replace(/\D/g, ''), 10) || 0;
+                    return numB - numA;
+                });
+                setOrders(normalized);
+            }
+        } catch (err) {
+            console.log("無法依據篩選條件獲取訂單，保留預設資料", err);
         } finally {
             setIsOrdersLoading(false);
         }
@@ -268,7 +323,7 @@ export default function AdminPortal() {
     useEffect(() => {
         if (activeTab === 'orders') {
             fetchMenuList();
-            fetchOrders();
+            fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
             fetchOrderItems();
         } else if (activeTab === 'schedules') {
             fetchMenuList();
@@ -497,7 +552,7 @@ export default function AdminPortal() {
                 alert('訂單資訊與品項排程更新成功！');
                 setShowEditOrderModal(false);
                 setEditingOrder(null);
-                fetchOrders();
+                fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
                 fetchOrderItems();
             } else {
                 const errText = await res.text();
@@ -522,7 +577,7 @@ export default function AdminPortal() {
             alert('訂單資訊與排單明細更新成功！(本地安全回退啟用)');
             setShowEditOrderModal(false);
             setEditingOrder(null);
-            fetchOrders();
+            fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
             fetchOrderItems();
         }
     };
@@ -536,7 +591,7 @@ export default function AdminPortal() {
             const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已接單')}`, config);
             if (res.ok) {
                 alert(`訂單 ${orderId} 接單成功！`);
-                fetchOrders();
+                fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
             } else {
                 throw new Error('更新失敗');
             }
@@ -556,7 +611,7 @@ export default function AdminPortal() {
             const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已退回')}`, config);
             if (res.ok) {
                 alert(`訂單 ${orderId} 已退回！`);
-                fetchOrders();
+                fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
             } else {
                 throw new Error('更新失敗');
             }
@@ -1370,6 +1425,14 @@ export default function AdminPortal() {
                 {activeTab === 'orders' && (
                     <OrdersTab
                         orders={orders}
+                        isOrdersLoading={isOrdersLoading}
+                        filterStartDate={filterStartDate}
+                        setFilterStartDate={setFilterStartDate}
+                        filterEndDate={filterEndDate}
+                        setFilterEndDate={setFilterEndDate}
+                        filterStatus={filterStatus}
+                        setFilterStatus={setFilterStatus}
+                        fetchOrdersWithFilters={fetchOrdersWithFilters}
                         handleAcceptOrder={handleAcceptOrder}
                         handleRejectOrder={handleRejectOrder}
                         startEditOrder={startEditOrder}

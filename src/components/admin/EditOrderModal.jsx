@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function EditOrderModal({
@@ -17,7 +18,7 @@ export default function EditOrderModal({
 }) {
     if (!show || !editingOrder) return null;
 
-    return (
+    return createPortal(
         <div className="modal-overlay">
             <div className="modal-container card" style={{ maxWidth: '750px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
                 <div className="modal-header">
@@ -283,6 +284,7 @@ export default function EditOrderModal({
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

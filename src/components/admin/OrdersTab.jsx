@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import EditOrderModal from './EditOrderModal';
 
 export default function OrdersTab({
     orders,
+    isOrdersLoading,
+    filterStartDate,
+    setFilterStartDate,
+    filterEndDate,
+    setFilterEndDate,
+    filterStatus,
+    setFilterStatus,
+    fetchOrdersWithFilters,
     handleAcceptOrder,
     handleRejectOrder,
     startEditOrder,
@@ -19,8 +27,75 @@ export default function OrdersTab({
     handleAddDiscountItem,
     handleSaveOrderSubmit
 }) {
+    const [localStartDate, setLocalStartDate] = useState(filterStartDate);
+    const [localEndDate, setLocalEndDate] = useState(filterEndDate);
+    const [localStatus, setLocalStatus] = useState(filterStatus);
+
+    const handleSearchClick = () => {
+        setFilterStartDate(localStartDate);
+        setFilterEndDate(localEndDate);
+        setFilterStatus(localStatus);
+        fetchOrdersWithFilters(localStatus, localStartDate, localEndDate);
+    };
+
     return (
         <>
+            {/* 🔍 篩選查詢控制面板 */}
+            <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
+                <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0, marginTop: 0, marginBottom: '16px' }}>
+                    🔍 訂單條件篩選
+                </h3>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>下單開始日期</label>
+                        <input 
+                            type="date" 
+                            className="input" 
+                            style={{ width: '100%', minHeight: '38px' }}
+                            value={localStartDate}
+                            onChange={(e) => setLocalStartDate(e.target.value)}
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>下單結束日期</label>
+                        <input 
+                            type="date" 
+                            className="input" 
+                            style={{ width: '100%', minHeight: '38px' }}
+                            value={localEndDate}
+                            onChange={(e) => setLocalEndDate(e.target.value)}
+                        />
+                    </div>
+                    <div style={{ flex: '1 1 180px' }}>
+                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>訂單狀態</label>
+                        <select 
+                            className="input" 
+                            style={{ width: '100%', minHeight: '38px' }}
+                            value={localStatus}
+                            onChange={(e) => setLocalStatus(e.target.value)}
+                        >
+                            <option value="全部">全部</option>
+                            <option value="待確認">待確認</option>
+                            <option value="已接單">已接單</option>
+                            <option value="已出貨">已出貨</option>
+                            <option value="已完成">已完成</option>
+                            <option value="已退回">已退回</option>
+                            <option value="已取消">已取消</option>
+                        </select>
+                    </div>
+                    <div style={{ flex: '0 0 auto' }}>
+                        <button 
+                            className="btn btn-primary" 
+                            style={{ height: '38px', minWidth: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                            onClick={handleSearchClick}
+                            disabled={isOrdersLoading}
+                        >
+                            {isOrdersLoading ? '查詢中...' : '🔍 篩選查詢'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div className="stats-cards">
                 <div className="stat-card stat-card-warning">
                     <div className="stat-label">待處理客戶預約單</div>

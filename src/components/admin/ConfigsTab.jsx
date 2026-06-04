@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 const ConfigsTab = ({
@@ -115,7 +116,7 @@ const ConfigsTab = ({
             </div>
 
             {/* FAQ 新增/編輯 Modal */}
-            {showAddFaqModal && (
+            {showAddFaqModal && createPortal(
                 <div className="modal-overlay">
                     <div className="modal-container card" style={{ maxWidth: '500px', width: '90%' }}>
                         <div className="modal-header">
@@ -181,7 +182,8 @@ const ConfigsTab = ({
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

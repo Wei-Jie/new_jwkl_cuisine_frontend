@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export function AddMenuModal({
@@ -10,7 +11,7 @@ export function AddMenuModal({
 }) {
     if (!show) return null;
 
-    return (
+    return createPortal(
         <div className="modal-overlay">
             <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', margin: 'auto' }}>
                 <div className="modal-header">
@@ -113,7 +114,8 @@ export function AddMenuModal({
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -126,7 +128,7 @@ export function EditMenuModal({
 }) {
     if (!show) return null;
 
-    return (
+    return createPortal(
         <div className="modal-overlay">
             <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto', margin: 'auto' }}>
                 <div className="modal-header">
@@ -267,6 +269,7 @@ export function EditMenuModal({
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
