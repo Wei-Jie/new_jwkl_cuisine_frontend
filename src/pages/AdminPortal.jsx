@@ -574,26 +574,19 @@ export default function AdminPortal() {
                 throw new Error(errText || '更新失敗');
             }
         } catch (err) {
-            setOrders(prev => prev.map(o => o.order_id === editingOrder.order_id ? {
-                ...o,
-                customer_name: backendPayload.customerName,
-                phone: backendPayload.phone,
-                amount: backendPayload.amount,
-                status: backendPayload.status,
-                delivery_date: backendPayload.deliveryDate,
-                payment_status: backendPayload.paymentStatus,
-                payment_date: backendPayload.paymentDate,
-                notes: backendPayload.notes,
-                line_id: backendPayload.lineId,
-                instagram: backendPayload.instagram,
-                facebook: backendPayload.facebook,
-                email: backendPayload.email
-            } : o));
-            alert('訂單資訊與排單明細更新成功！(本地安全回退啟用)');
-            setShowEditOrderModal(false);
-            setEditingOrder(null);
-            fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
-            fetchOrderItems();
+            console.error("儲存訂單發生錯誤:", err);
+            let displayMsg = err.message || '更新失敗';
+            try {
+                // 嘗試解析後端回傳的 JSON 錯誤，提取 message
+                const parsed = JSON.parse(err.message);
+                if (parsed && parsed.message) {
+                    displayMsg = parsed.message;
+                }
+            } catch (e) {
+                // 若非 JSON 格式則保持原樣
+            }
+            alert(`❌ 儲存失敗：\n${displayMsg}`);
+            // 出錯時不關閉 Modal，以便店主更正內容或取消
         }
     };
 
