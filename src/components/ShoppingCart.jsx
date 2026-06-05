@@ -49,7 +49,10 @@ export default function ShoppingCart({
         if (!name.trim()) { setValidationError('請填寫姓名！'); return; }
         if (!phone.trim()) { setValidationError('請填寫手機號碼！'); return; }
         if (!/^09\d{8}$/.test(phone)) { setValidationError('手機格式不正確，應為 09 開頭的 10 位數字！'); return; }
-        if (!deliveryDate) { setValidationError('請選擇預定出貨/取貨日期！'); return; }
+        if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setValidationError('電子郵件格式不正確，請重新填寫！');
+            return;
+        }
         
         // 起訂金額防呆已被管理員要求取消
 
@@ -63,7 +66,7 @@ export default function ShoppingCart({
                 line_id: lineId.trim(),
                 facebook: facebook.trim(),
                 email: email.trim(),
-                delivery_date: deliveryDate,
+                delivery_date: "",
                 notes: notes.trim(),
                 amount: totalAmount,
                 items: cart.flatMap(item => {
@@ -280,18 +283,7 @@ export default function ShoppingCart({
                                         </div>
                                     </div>
 
-                                    <div className="form-group">
-                                        <label className="form-label">
-                                            <Calendar size={13} /> 預約取貨/出貨日期 <span className="required">*</span>
-                                        </label>
-                                        <input
-                                            type="date"
-                                            className="form-control"
-                                            value={deliveryDate}
-                                            min={new Date().toISOString().split('T')[0]} // 不能選今天以前
-                                            onChange={(e) => setDeliveryDate(e.target.value)}
-                                        />
-                                    </div>
+
 
                                     <div className="form-group">
                                         <label className="form-label">
