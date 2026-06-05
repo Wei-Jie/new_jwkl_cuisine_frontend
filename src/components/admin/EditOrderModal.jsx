@@ -303,7 +303,7 @@ export default function EditOrderModal({
                     </div>
 
                     {/* Modal 底部按鈕 */}
-                    <div className="modal-footer" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '16px', display: 'flex', gap: '10px' }}>
+                    <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">💾 儲存訂單與排程變更</button>
                         <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
                     </div>

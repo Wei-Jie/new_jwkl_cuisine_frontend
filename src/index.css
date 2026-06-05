@@ -672,3 +672,22 @@ select.form-control-sm {
   font-size: 13px !important;
   line-height: 1.4 !important;
 }
+
+/* ========================================================
+   [最新優化] 彈窗底部按鈕區域 (.modal-footer) 與響應式間距
+   ======================================================= */
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .modal-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

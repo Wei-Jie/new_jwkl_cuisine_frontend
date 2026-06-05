@@ -108,7 +108,7 @@ export function AddMenuModal({
                             onChange={(e) => setNewMenuForm({ ...newMenuForm, image_url: e.target.value })}
                         />
                     </div>
-                    <div className="modal-footer" style={{ marginTop: '10px' }}>
+                    <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">確認新增</button>
                         <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
                     </div>
@@ -263,7 +263,7 @@ export function EditMenuModal({
                             </button>
                         </div>
                     </div>
-                    <div className="modal-footer" style={{ marginTop: '10px' }}>
+                    <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">儲存修改</button>
                         <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
                     </div>
