@@ -117,7 +117,7 @@ export default function EditOrderModal({
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                         <div className="form-group">
                             <label className="form-label">付款狀態</label>
                             <select 
@@ -129,13 +129,23 @@ export default function EditOrderModal({
                                     setEditingOrder({ 
                                         ...editingOrder, 
                                         payment_status: val,
-                                        payment_date: val === '已付款' ? today : ''
+                                        payment_date: val === 'Spacer' || val === '已付款' ? today : ''
                                     });
                                 }}
                             >
                                 <option value="未付款">未付款</option>
+                                <option value="Spacer" style={{ display: 'none' }}></option>
                                 <option value="已付款">已付款</option>
                             </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">收款日期</label>
+                            <input 
+                                type="date" 
+                                className="form-control"
+                                value={editingOrder.payment_date ? editingOrder.payment_date.replace(/\//g, '-') : ''}
+                                onChange={(e) => setEditingOrder({ ...editingOrder, payment_date: e.target.value ? e.target.value.replace(/-/g, '/') : '' })}
+                            />
                         </div>
                         <div className="form-group">
                             <label className="form-label">預約單狀態</label>
@@ -293,7 +303,7 @@ export default function EditOrderModal({
                     </div>
 
                     {/* Modal 底部按鈕 */}
-                    <div className="modal-footer" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '16px' }}>
+                    <div className="modal-footer" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '16px', display: 'flex', gap: '10px' }}>
                         <button type="submit" className="btn btn-primary">💾 儲存訂單與排程變更</button>
                         <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
                     </div>
