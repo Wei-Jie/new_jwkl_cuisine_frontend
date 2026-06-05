@@ -1360,22 +1360,18 @@ export default function AdminPortal() {
             };
             const url = editingFaqId ? `/api/v1/faqs/${editingFaqId}` : '/api/v1/faqs';
             const res = await customFetch(url, config);
-            if (!res.ok) throw new Error('儲存失敗');
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || '儲存常見問題失敗');
+            }
             alert('常見問題儲存成功！');
             setShowAddFaqModal(false);
             setEditingFaqId(null);
             setNewFaqForm({ question: '', answer: '', sortOrder: 0 });
             fetchAdminConfigsAndFaqs();
         } catch (err) {
-            if (editingFaqId) {
-                setFaqList(prev => prev.map(f => f.id === editingFaqId ? { ...f, ...editingFaq } : f));
-            } else {
-                setFaqList(prev => [...prev, { id: Date.now(), ...newFaqForm }]);
-            }
-            alert('常見問題儲存成功！(本地安全回退)');
-            setShowAddFaqModal(false);
-            setEditingFaqId(null);
-            setNewFaqForm({ question: '', answer: '', sortOrder: 0 });
+            console.error("儲存問答發生錯誤:", err);
+            alert(`❌ 儲存失敗：\n${err.message}`);
         }
     };
 
@@ -1386,12 +1382,16 @@ export default function AdminPortal() {
                 method: 'DELETE',
                 headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
             };
-            await customFetch(`/api/v1/faqs/${id}`, config);
+            const res = await customFetch(`/api/v1/faqs/${id}`, config);
+            if (!res.ok) {
+                const errText = await res.text();
+                throw new Error(errText || '刪除失敗');
+            }
             alert('常見問題刪除成功！');
             fetchAdminConfigsAndFaqs();
         } catch (err) {
-            setFaqList(prev => prev.filter(f => f.id !== id));
-            alert('常見問題刪除成功！(本地安全回退)');
+            console.error("刪除問答發生錯誤:", err);
+            alert(`❌ 刪除失敗：\n${err.message}`);
         }
     };
 
