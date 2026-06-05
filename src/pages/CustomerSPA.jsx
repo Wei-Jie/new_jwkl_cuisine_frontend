@@ -170,8 +170,8 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     <h2>小灶私廚：傳承溫潤的舌尖記憶</h2>
                 </div>
                 <div className="about-content" style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: 'var(--color-text-secondary)' }}>
-                    <p>{aboutText1}</p>
-                    <p>{aboutText2}</p>
+                    <p style={{ whiteSpace: 'pre-line' }}>{aboutText1}</p>
+                    <p style={{ whiteSpace: 'pre-line' }}>{aboutText2}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
                         <span className="tag">🥘 每日手工限量</span>
                         <span className="tag">🌿 當日新鮮食材</span>
