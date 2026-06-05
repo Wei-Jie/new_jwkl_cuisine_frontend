@@ -236,6 +236,11 @@ h3 { font-size: 17px; font-weight: 600; color: var(--color-text); }
   box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
 }
 
+/* 確保所有輸入框與選擇下拉選單在不同瀏覽器下皆能保持 48px 高度完美對齊 */
+input.form-control, select.form-control {
+  height: 48px;
+}
+
 /* ========================================================
    移動端橫向滾動分類導航 (Horizontally Scrollable Nav)
    ======================================================= */

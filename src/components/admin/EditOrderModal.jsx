@@ -122,7 +122,6 @@ export default function EditOrderModal({
                             <label className="form-label">付款狀態</label>
                             <select 
                                 className="form-control" 
-                                style={{ height: '48px' }}
                                 value={editingOrder.payment_status || '未付款'} 
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -144,7 +143,6 @@ export default function EditOrderModal({
                             <input 
                                 type="date" 
                                 className="form-control"
-                                style={{ height: '48px' }}
                                 value={editingOrder.payment_date ? editingOrder.payment_date.replace(/\//g, '-') : ''}
                                 onChange={(e) => setEditingOrder({ ...editingOrder, payment_date: e.target.value ? e.target.value.replace(/-/g, '/') : '' })}
                             />
@@ -153,7 +151,6 @@ export default function EditOrderModal({
                             <label className="form-label">預約單狀態</label>
                             <select 
                                 className="form-control" 
-                                style={{ height: '48px' }}
                                 value={editingOrder.status || '待確認'} 
                                 onChange={(e) => {
                                     const val = e.target.value;
