@@ -17,10 +17,70 @@ export default function SchedulesTab({
     saveBatchSchedules,
     handleStatusSelectChange,
     toggleSelectAll,
-    toggleSelectOne
+    toggleSelectOne,
+    scheduleDateRangeMode,
+    setScheduleDateRangeMode,
+    scheduleStartDate,
+    setScheduleStartDate,
+    scheduleEndDate,
+    setScheduleEndDate,
+    handleScheduleDateRangeModeChange
 }) {
     return (
         <>
+            {/* 📅 排單時間區間篩選面板 */}
+            <div className="card" style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #cbd5e1', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>📅 排單時間區間：</span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            {['today', 'week', 'month', 'year', 'all', 'custom'].map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => handleScheduleDateRangeModeChange(mode)}
+                                    className={`btn btn-sm ${scheduleDateRangeMode === mode ? 'btn-primary' : 'btn-outline'}`}
+                                    style={{ padding: '4px 10px', fontSize: '12px', minHeight: '28px', borderRadius: '15px' }}
+                                >
+                                    {{
+                                        today: '今天',
+                                        week: '本週',
+                                        month: '本月',
+                                        year: '今年',
+                                        all: '全部歷史',
+                                        custom: '自訂區間'
+                                    }[mode]}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={scheduleStartDate}
+                            disabled={scheduleDateRangeMode !== 'custom'}
+                            onChange={(e) => {
+                                setScheduleStartDate(e.target.value);
+                                setScheduleDateRangeMode('custom');
+                            }}
+                            style={{ height: '32px', padding: '4px 8px', fontSize: '13px', width: '135px' }}
+                        />
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>至</span>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={scheduleEndDate}
+                            disabled={scheduleDateRangeMode !== 'custom'}
+                            onChange={(e) => {
+                                setScheduleEndDate(e.target.value);
+                                setScheduleDateRangeMode('custom');
+                            }}
+                            style={{ height: '32px', padding: '4px 8px', fontSize: '13px', width: '135px' }}
+                        />
+                    </div>
+                </div>
+            </div>
+
             <div className="card" style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative', width: '100%', minWidth: '320px' }}>
@@ -183,7 +243,26 @@ export default function SchedulesTab({
                                 const itemPendingQty = orderItems.filter(item => {
                                     if ((item.itemStatus || item.item_status) !== '待製作') return false;
                                     const m2 = menuList.find(ml => ml.product_id === (item.productId || item.product_id));
-                                    return m2 && m2.name === pName;
+                                    if (!m2 || m2.name !== pName) return false;
+
+                                    // 關聯母訂單狀態排除無效訂單 (Bug 修復)
+                                    const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                    if (!parent) return false;
+                                    if (parent.status === '已出貨' || parent.status === '已完成' || parent.status === '已取消' || parent.status === '已退回') return false;
+
+                                    // 結合排單日期區間進行過濾 (時間區間篩選連動)
+                                    if (scheduleDateRangeMode !== 'all') {
+                                        const parseDate = (dStr) => {
+                                            if (!dStr) return 0;
+                                            const parts = dStr.replace(/-/g, '/').split('/');
+                                            return parts.length === 3 ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime() : 0;
+                                        };
+                                        const t = parseDate(parent.order_date || parent.orderDate);
+                                        const start = scheduleStartDate ? new Date(scheduleStartDate).getTime() : 0;
+                                        const end = scheduleEndDate ? new Date(scheduleEndDate).getTime() + 86400000 - 1 : Infinity;
+                                        if (t < start || t > end) return false;
+                                    }
+                                    return true;
                                 }).reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
                                 const itemTotalQty = schedules.filter(s => s.itemName === pName).reduce((sum, s) => sum + (parseFloat(s.qty) || 0), 0);
                                 

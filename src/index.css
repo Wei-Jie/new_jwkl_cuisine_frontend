@@ -611,6 +611,10 @@ select, select.form-control {
   animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.modal-container .admin-table {
+  min-width: auto !important;
+}
+
 .modal-header {
   display: flex;
   align-items: center;

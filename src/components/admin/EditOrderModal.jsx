@@ -7,6 +7,7 @@ export default function EditOrderModal({
     editingOrder,
     setEditingOrder,
     editingOrderItems,
+    setEditingOrderItems,
     menuList,
     onClose,
     onItemAmtChange,
@@ -141,7 +142,21 @@ export default function EditOrderModal({
                             <select 
                                 className="form-control" 
                                 value={editingOrder.status || '待確認'} 
-                                onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value })}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setEditingOrder({ ...editingOrder, status: val });
+                                    if (val === '已出貨' || val === '已完成') {
+                                        setEditingOrderItems(prev => prev.map(item => {
+                                            const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
+                                            if (isDiscount) return item;
+                                            return {
+                                                ...item,
+                                                itemStatus: '已完成',
+                                                item_status: 'processed' in item || 'item_status' in item ? '已完成' : '已完成'
+                                            };
+                                        }));
+                                    }
+                                }}
                             >
                                 <option value="待確認">待確認</option>
                                 <option value="已接單">已接單 (待排程)</option>

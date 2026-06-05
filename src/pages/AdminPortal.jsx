@@ -97,6 +97,13 @@ export default function AdminPortal() {
     });
 
     // ==========================================
+    // 5.1. 排單日期篩選狀態 (品項排單管理)
+    // ==========================================
+    const [scheduleDateRangeMode, setScheduleDateRangeMode] = useState('all');
+    const [scheduleStartDate, setScheduleStartDate] = useState('2020-01-01');
+    const [scheduleEndDate, setScheduleEndDate] = useState('2030-12-31');
+
+    // ==========================================
     // 6. 系統參數與 FAQ 常見問題狀態
     // ==========================================
     const [faqList, setFaqList] = useState([]);
@@ -679,6 +686,33 @@ export default function AdminPortal() {
         setIsDropdownOpen(false);
         fetchSchedules(selectedProducts);
     };
+
+    const handleScheduleDateRangeModeChange = (mode) => {
+        setScheduleDateRangeMode(mode);
+        if (mode !== 'custom') {
+            const { start, end } = getPresetDateRange(mode);
+            setScheduleStartDate(start);
+            setScheduleEndDate(end);
+        }
+    };
+
+    const filteredSchedules = useMemo(() => {
+        if (scheduleDateRangeMode === 'all') return schedules;
+
+        const parseDate = (dStr) => {
+            if (!dStr) return 0;
+            const parts = dStr.replace(/-/g, '/').split('/');
+            return parts.length === 3 ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime() : 0;
+        };
+
+        const start = scheduleStartDate ? new Date(scheduleStartDate).getTime() : 0;
+        const end = scheduleEndDate ? new Date(scheduleEndDate).getTime() + 86400000 - 1 : Infinity;
+
+        return schedules.filter(s => {
+            const t = parseDate(s.orderDate || s.order_date);
+            return t >= start && t <= end;
+        });
+    }, [schedules, scheduleDateRangeMode, scheduleStartDate, scheduleEndDate]);
 
     const handleStatusSelectChange = (itemId, newStatus) => {
         setSchedules(prev => prev.map(item => 
@@ -1441,6 +1475,7 @@ export default function AdminPortal() {
                         editingOrder={editingOrder}
                         setEditingOrder={setEditingOrder}
                         editingOrderItems={editingOrderItems}
+                        setEditingOrderItems={setEditingOrderItems}
                         menuList={menuList}
                         handleItemAmtChange={handleItemAmtChange}
                         handleItemQtyChange={handleItemQtyChange}
@@ -1453,7 +1488,7 @@ export default function AdminPortal() {
 
                 {activeTab === 'schedules' && (
                     <SchedulesTab
-                        schedules={schedules}
+                        schedules={filteredSchedules}
                         isDropdownOpen={isDropdownOpen}
                         setIsDropdownOpen={setIsDropdownOpen}
                         selectedProducts={selectedProducts}
@@ -1470,6 +1505,13 @@ export default function AdminPortal() {
                         handleStatusSelectChange={handleStatusSelectChange}
                         toggleSelectAll={toggleSelectAll}
                         toggleSelectOne={toggleSelectOne}
+                        scheduleDateRangeMode={scheduleDateRangeMode}
+                        setScheduleDateRangeMode={setScheduleDateRangeMode}
+                        scheduleStartDate={scheduleStartDate}
+                        setScheduleStartDate={setScheduleStartDate}
+                        scheduleEndDate={scheduleEndDate}
+                        setScheduleEndDate={setScheduleEndDate}
+                        handleScheduleDateRangeModeChange={handleScheduleDateRangeModeChange}
                     />
                 )}
 
