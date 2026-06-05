@@ -245,10 +245,9 @@ export default function SchedulesTab({
                                     const m2 = menuList.find(ml => ml.product_id === (item.productId || item.product_id));
                                     if (!m2 || m2.name !== pName) return false;
 
-                                    // 關聯母訂單狀態排除無效訂單 (Bug 修復)
+                                    // 關聯母訂單狀態排除無效訂單 (Bug 修復，只計算已接單訂單)
                                     const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
-                                    if (!parent) return false;
-                                    if (parent.status === '已出貨' || parent.status === '已完成' || parent.status === '已取消' || parent.status === '已退回') return false;
+                                    if (!parent || parent.status !== '已接單') return false;
 
                                     // 結合排單日期區間進行過濾 (時間區間篩選連動)
                                     if (scheduleDateRangeMode !== 'all') {
@@ -258,8 +257,8 @@ export default function SchedulesTab({
                                             return parts.length === 3 ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime() : 0;
                                         };
                                         const t = parseDate(parent.order_date || parent.orderDate);
-                                        const start = scheduleStartDate ? new Date(scheduleStartDate).getTime() : 0;
-                                        const end = scheduleEndDate ? new Date(scheduleEndDate).getTime() + 86400000 - 1 : Infinity;
+                                        const start = scheduleStartDate ? new Date(scheduleStartDate.replace(/-/g, '/')).getTime() : 0;
+                                        const end = scheduleEndDate ? new Date(scheduleEndDate.replace(/-/g, '/')).getTime() + 86400000 - 1 : Infinity;
                                         if (t < start || t > end) return false;
                                     }
                                     return true;

@@ -96,12 +96,20 @@ export default function AdminPortal() {
         return `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
     });
 
+    const getTodayDateStr = () => {
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = String(today.getMonth() + 1).padStart(2, '0');
+        const d = String(today.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
     // ==========================================
     // 5.1. 排單日期篩選狀態 (品項排單管理)
     // ==========================================
     const [scheduleDateRangeMode, setScheduleDateRangeMode] = useState('all');
-    const [scheduleStartDate, setScheduleStartDate] = useState('2020-01-01');
-    const [scheduleEndDate, setScheduleEndDate] = useState('2030-12-31');
+    const [scheduleStartDate, setScheduleStartDate] = useState(getTodayDateStr);
+    const [scheduleEndDate, setScheduleEndDate] = useState(getTodayDateStr);
 
     // ==========================================
     // 6. 系統參數與 FAQ 常見問題狀態
@@ -689,7 +697,11 @@ export default function AdminPortal() {
 
     const handleScheduleDateRangeModeChange = (mode) => {
         setScheduleDateRangeMode(mode);
-        if (mode !== 'custom') {
+        if (mode === 'all') {
+            const todayStr = getTodayDateStr();
+            setScheduleStartDate(todayStr);
+            setScheduleEndDate(todayStr);
+        } else if (mode !== 'custom') {
             const { start, end } = getPresetDateRange(mode);
             setScheduleStartDate(start);
             setScheduleEndDate(end);
@@ -705,8 +717,8 @@ export default function AdminPortal() {
             return parts.length === 3 ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime() : 0;
         };
 
-        const start = scheduleStartDate ? new Date(scheduleStartDate).getTime() : 0;
-        const end = scheduleEndDate ? new Date(scheduleEndDate).getTime() + 86400000 - 1 : Infinity;
+        const start = scheduleStartDate ? new Date(scheduleStartDate.replace(/-/g, '/')).getTime() : 0;
+        const end = scheduleEndDate ? new Date(scheduleEndDate.replace(/-/g, '/')).getTime() + 86400000 - 1 : Infinity;
 
         return schedules.filter(s => {
             const t = parseDate(s.orderDate || s.order_date);
