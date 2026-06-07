@@ -121,6 +121,7 @@ export default function App() {
                 onClearCart={handleClearCart}
                 minOrderAmount={0}
                 onSubmitOrder={handleSubmitOrder}
+                onSectionChange={setActiveSection}
             />
 
             <div className="toast-container">

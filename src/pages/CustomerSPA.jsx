@@ -323,15 +323,18 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                                 </div>
                                 
                                 {isOpen && (
-                                    <div style={{ 
-                                        marginTop: '12px', 
-                                        fontSize: '14px', 
-                                        color: 'var(--color-text-secondary)',
-                                        animation: 'fadeIn 0.25s ease',
-                                        lineHeight: '1.6',
-                                        borderTop: '1px dashed var(--color-border)',
-                                        paddingTop: '12px'
-                                    }}>
+                                    <div 
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ 
+                                            marginTop: '12px', 
+                                            fontSize: '14px', 
+                                            color: 'var(--color-text-secondary)',
+                                            animation: 'fadeIn 0.25s ease',
+                                            lineHeight: '1.6',
+                                            borderTop: '1px dashed var(--color-border)',
+                                            paddingTop: '12px'
+                                        }}
+                                    >
                                         <div>{faq.answer}</div>
                                         {faq.imageUrl && (
                                             <div style={{ marginTop: '12px', textAlign: 'center' }}>

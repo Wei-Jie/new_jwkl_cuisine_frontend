@@ -10,7 +10,8 @@ export default function ShoppingCart({
     onRemoveItem,
     onClearCart,
     minOrderAmount = 300,
-    onSubmitOrder
+    onSubmitOrder,
+    onSectionChange
 }) {
     // 預約單表單狀態
     const [name, setName] = useState('');
@@ -59,6 +60,13 @@ export default function ShoppingCart({
     }, 0);
 
     const hasWeightItem = cart.some(item => String(item.price).includes('*') || String(item.price).includes('重量'));
+
+    const handleShopClick = () => {
+        if (onSectionChange) {
+            onSectionChange('menu');
+        }
+        onClose();
+    };
 
     const handlePhoneChange = (val) => {
         // 手機防呆：只允許輸入數字，最大 10 碼
@@ -170,7 +178,7 @@ export default function ShoppingCart({
                         <div className="empty-cart-view">
                             <ShoppingBag size={48} className="empty-icon" />
                             <p>您的購物車空空的，快去選購吧！</p>
-                            <button className="btn btn-primary btn-sm btn-shop" onClick={onClose}>
+                            <button className="btn btn-primary btn-sm btn-shop" onClick={handleShopClick}>
                                 點我選購美食
                             </button>
                         </div>
