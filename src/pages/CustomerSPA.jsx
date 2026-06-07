@@ -341,7 +341,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                     style={{ 
                                                         maxWidth: '100%', 
-                                                        maxHeight: '300px', 
+                                                        maxHeight: '600px', 
                                                         borderRadius: 'var(--radius)', 
                                                         boxShadow: 'var(--shadow-sm)',
                                                         objectFit: 'contain'

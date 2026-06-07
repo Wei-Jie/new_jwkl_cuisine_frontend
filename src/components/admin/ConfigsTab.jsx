@@ -175,6 +175,11 @@ const ConfigsTab = ({
                                         else setNewFaqForm({ ...newFaqForm, imageUrl: e.target.value });
                                     }}
                                 />
+                                <small style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5' }}>
+                                    💡 提示：支援專案本機路徑（如 <code>pic/filename.jpg</code>）或外部直接圖片網址。<br />
+                                    若使用 Google Drive 圖片，請將分享連結的 <b>檔案ID</b> 代入以下直連格式：<br />
+                                    <code style={{ backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: '4px', wordBreak: 'break-all', display: 'inline-block', marginTop: '2px' }}>https://lh3.googleusercontent.com/d/您的檔案ID</code>
+                                </small>
                             </div>
                             <div className="modal-footer" style={{ marginTop: '10px' }}>
                                 <button type="submit" className="btn btn-primary">儲存問答</button>
