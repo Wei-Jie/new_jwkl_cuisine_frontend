@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, X, Plus, Minus, Trash2, Calendar, Phone, User, FileText, Send } from 'lucide-react';
+import { customFetch } from '../utils/helpers';
 import './ShoppingCart.css';
 
 export default function ShoppingCart({
@@ -32,7 +33,7 @@ export default function ShoppingCart({
         if (isOpen) {
             const fetchLinks = async () => {
                 try {
-                    const res = await fetch('/api/v1/system-configs', {
+                    const res = await customFetch('/api/v1/system-configs', {
                         headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
                     });
                     if (res.ok) {

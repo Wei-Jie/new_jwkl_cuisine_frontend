@@ -9,6 +9,8 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
     const [systemAnnouncement, setSystemAnnouncement] = useState('🥘 歡迎來到小灶私廚！線上購物車預約訂單已啟用，歡迎下單！');
     const [aboutText1, setAboutText1] = useState('小灶私廚創立於一個溫暖的街角。我們始終相信，最好的料理不需要繁瑣的修飾，而是來自對食材本質的極致堅持，與一份真摯的人情味。');
     const [aboutText2, setAboutText2] = useState('我們的招牌「手包韭菜玉米水餃」採用當日採購的新鮮韭菜，搭配特選在地豬肉，在皮薄與餡豐之間取得絕佳平衡；特製「紅燒肉」更是遵循古法，慢火精燉數小時，帶出濃郁紅亮、肥而不膩的精緻口感。');
+    const [lineLink, setLineLink] = useState('https://line.me/ti/p/~wei750211');
+    const [igLink, setIgLink] = useState('https://www.instagram.com/jwkl_cuisine/');
     const [isLoading, setIsLoading] = useState(true);
 
     const [activeFaqId, setActiveFaqId] = useState(null);
@@ -98,6 +100,12 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                         
                         const t2 = dataConfigs.find(c => c.configKey === 'ABOUT_TEXT_2');
                         if (t2) setAboutText2(t2.configValue);
+                        
+                        const line = dataConfigs.find(c => c.configKey === 'LINE_LINK');
+                        if (line && line.configValue) setLineLink(line.configValue);
+                        
+                        const ig = dataConfigs.find(c => c.configKey === 'IG_LINK');
+                        if (ig && ig.configValue) setIgLink(ig.configValue);
                     }
                 } catch (e) {
                     console.log("系統設定載入失敗，採用預設溫馨設定");
@@ -357,6 +365,59 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                             </div>
                         );
                     })}
+                </div>
+            </section>
+
+            {/* SECTION 4: 聯絡我們 */}
+            <section id="section-contact" className="card" style={{ marginTop: '24px', padding: '24px', textAlign: 'center' }}>
+                <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0, margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600', color: 'var(--color-text)' }}>
+                    💬 有任何下單疑問？歡迎直接聯絡我們
+                </h3>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <a 
+                        href={lineLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="contact-btn contact-btn-line"
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            padding: '10px 20px', 
+                            fontSize: '13px', 
+                            fontWeight: '600', 
+                            borderRadius: '30px', 
+                            textDecoration: 'none', 
+                            transition: 'all 0.2s ease',
+                            backgroundColor: '#06C755',
+                            color: '#ffffff',
+                            boxShadow: '0 2px 6px rgba(6, 199, 85, 0.15)'
+                        }}
+                    >
+                        💬 點此聯絡 LINE 客服
+                    </a>
+                    <a 
+                        href={igLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="contact-btn contact-btn-ig"
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            padding: '10px 20px', 
+                            fontSize: '13px', 
+                            fontWeight: '600', 
+                            borderRadius: '30px', 
+                            textDecoration: 'none', 
+                            transition: 'all 0.2s ease',
+                            background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                            color: '#ffffff',
+                            boxShadow: '0 2px 6px rgba(220, 39, 67, 0.15)'
+                        }}
+                    >
+                        📸 追蹤 Instagram 專頁
+                    </a>
                 </div>
             </section>
 
