@@ -313,6 +313,11 @@ input.form-control, select.form-control {
   width: 100% !important;
 }
 
+.faq-table {
+  min-width: auto !important; /* 消除常見問題表格的 1200px 最小寬度限制，自適應卡片寬度以消除滾動條 */
+  width: 100% !important;
+}
+
 /* 庫存管理頁面：頂部雙圖卡並排布局 */
 .inventory-top-row {
   display: grid;

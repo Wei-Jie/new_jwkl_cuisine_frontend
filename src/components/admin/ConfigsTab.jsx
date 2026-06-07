@@ -84,7 +84,7 @@ const ConfigsTab = ({
                         <div style={{ textAlign: 'center', padding: '20px' }}>載入問答中...</div>
                     ) : (
                         <div className="responsive-table-wrap" style={{ maxHeight: '420px', overflowY: 'auto' }}>
-                            <table className="admin-table">
+                            <table className="admin-table faq-table">
                                 <thead>
                                     <tr>
                                         <th style={{ width: '40px' }}>排序</th>

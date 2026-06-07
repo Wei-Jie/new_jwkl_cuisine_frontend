@@ -336,8 +336,9 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                                         {faq.imageUrl && (
                                             <div style={{ marginTop: '12px', textAlign: 'center' }}>
                                                 <img 
-                                                    src={faq.imageUrl} 
+                                                    src={faq.imageUrl.startsWith('http') || faq.imageUrl.startsWith('/') ? faq.imageUrl : `/${faq.imageUrl}`} 
                                                     alt="常見問題說明圖" 
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
                                                     style={{ 
                                                         maxWidth: '100%', 
                                                         maxHeight: '300px', 
