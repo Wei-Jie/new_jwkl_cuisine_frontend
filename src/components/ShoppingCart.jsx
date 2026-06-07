@@ -33,9 +33,7 @@ export default function ShoppingCart({
         if (isOpen) {
             const fetchLinks = async () => {
                 try {
-                    const res = await customFetch('/api/v1/system-configs', {
-                        headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
-                    });
+                    const res = await customFetch('/api/v1/system-configs');
                     if (res.ok) {
                         const data = await res.json();
                         const line = data.find(c => c.configKey === 'LINE_LINK');

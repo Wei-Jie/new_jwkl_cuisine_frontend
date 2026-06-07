@@ -50,7 +50,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+                const config = {};
                 
                 // 1. 獲取商品列表
                 try {

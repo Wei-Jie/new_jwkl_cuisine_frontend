@@ -57,8 +57,7 @@ export default function App() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(orderData)
             };

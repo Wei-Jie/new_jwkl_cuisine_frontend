@@ -14,8 +14,7 @@ export default function CustomerTrack() {
     useEffect(() => {
         const fetchMenu = async () => {
             try {
-                const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
-                const res = await customFetch('/api/v1/menus/all', config);
+                const res = await customFetch('/api/v1/menus');
                 if (res.ok) {
                     const data = await res.json();
                     const normalized = data.map(m => ({
@@ -42,12 +41,7 @@ export default function CustomerTrack() {
 
         setIsLoading(true);
         try {
-            const config = {
-                headers: {
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
-                }
-            };
-            const res = await customFetch(`/api/v1/orders/track?phone=${phone}&orderId=${orderId}`, config);
+            const res = await customFetch(`/api/v1/orders/track?phone=${phone}&orderId=${orderId}`);
             if (res.ok) {
                 const data = await res.json();
                 const orderObj = data.order || {};
