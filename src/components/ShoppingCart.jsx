@@ -318,6 +318,31 @@ export default function ShoppingCart({
                                         )}
                                     </button>
                                 </form>
+                                
+                                {/* 💡 新增社群聯絡管道 */}
+                                <div className="cart-contact-section">
+                                    <div className="contact-divider">
+                                        <span>有任何下單疑問？歡迎直接聯絡我們</span>
+                                    </div>
+                                    <div className="contact-buttons-grid">
+                                        <a 
+                                            href="https://line.me/ti/p/~wei750211" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="contact-btn contact-btn-line"
+                                        >
+                                            💬 LINE 聯絡客服 (ID: wei750211)
+                                        </a>
+                                        <a 
+                                            href="https://www.instagram.com/jwkl_cuisine/" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="contact-btn contact-btn-ig"
+                                        >
+                                            📸 追蹤 Instagram 專頁
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </>
                     )}
