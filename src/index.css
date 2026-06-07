@@ -72,6 +72,11 @@ input, select, textarea {
   outline: none;
 }
 
+/* 讓錨點滾動定位時自動空出頂部導覽列的高度，防止標題被遮擋 */
+section[id^="section-"] {
+  scroll-margin-top: calc(var(--nav-height) + 20px);
+}
+
 /* ========================================================
    響應式排版與移動端微調 (Mobile-First / RWD)
    ======================================================== */
