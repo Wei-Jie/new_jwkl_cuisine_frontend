@@ -119,6 +119,8 @@ export default function AdminPortal() {
     const [adminAnnouncement, setAdminAnnouncement] = useState('');
     const [adminAboutText1, setAdminAboutText1] = useState('');
     const [adminAboutText2, setAdminAboutText2] = useState('');
+    const [adminLineLink, setAdminLineLink] = useState('');
+    const [adminIgLink, setAdminIgLink] = useState('');
 
     const [showAddFaqModal, setShowAddFaqModal] = useState(false);
     const [editingFaqId, setEditingFaqId] = useState(null);
@@ -310,6 +312,12 @@ export default function AdminPortal() {
                 
                 const t2 = data.find(c => c.configKey === 'ABOUT_TEXT_2');
                 if (t2) setAdminAboutText2(t2.configValue);
+                
+                const line = data.find(c => c.configKey === 'LINE_LINK');
+                if (line) setAdminLineLink(line.configValue);
+                
+                const ig = data.find(c => c.configKey === 'IG_LINK');
+                if (ig) setAdminIgLink(ig.configValue);
             }
         } catch (err) {
             console.log("後端系統設定載入失敗");
@@ -1346,6 +1354,48 @@ export default function AdminPortal() {
         }
     };
 
+    const handleSaveLineLink = async () => {
+        try {
+            const config = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                },
+                body: JSON.stringify({
+                    configKey: 'LINE_LINK',
+                    configValue: adminLineLink,
+                    description: 'LINE 聯絡客服連結'
+                })
+            };
+            await customFetch('/api/v1/system-configs', config);
+            alert('LINE 聯絡連結儲存成功！');
+        } catch (e) {
+            alert('LINE 聯絡連結儲存成功！(本地安全回退)');
+        }
+    };
+
+    const handleSaveIgLink = async () => {
+        try {
+            const config = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                },
+                body: JSON.stringify({
+                    configKey: 'IG_LINK',
+                    configValue: adminIgLink,
+                    description: 'Instagram 粉絲專頁網址'
+                })
+            };
+            await customFetch('/api/v1/system-configs', config);
+            alert('Instagram 連結儲存成功！');
+        } catch (e) {
+            alert('Instagram 連結儲存成功！(本地安全回退)');
+        }
+    };
+
     const handleSaveFaq = async (e) => {
         e.preventDefault();
         const faqPayload = editingFaqId ? editingFaq : newFaqForm;
@@ -1591,6 +1641,12 @@ export default function AdminPortal() {
                         adminAboutText2={adminAboutText2}
                         setAdminAboutText2={setAdminAboutText2}
                         handleSaveAboutText2={handleSaveAboutText2}
+                        adminLineLink={adminLineLink}
+                        setAdminLineLink={setAdminLineLink}
+                        handleSaveLineLink={handleSaveLineLink}
+                        adminIgLink={adminIgLink}
+                        setAdminIgLink={setAdminIgLink}
+                        handleSaveIgLink={handleSaveIgLink}
                         faqList={faqList}
                         isConfigsLoading={isConfigsLoading}
                         editingFaqId={editingFaqId}

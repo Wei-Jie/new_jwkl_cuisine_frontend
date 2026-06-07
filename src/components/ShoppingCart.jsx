@@ -23,6 +23,31 @@ export default function ShoppingCart({
     const [email, setEmail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationError, setValidationError] = useState('');
+    const [lineLink, setLineLink] = useState('https://line.me/ti/p/~wei750211');
+    const [igLink, setIgLink] = useState('https://www.instagram.com/jwkl_cuisine/');
+
+    // 💡 動態載入 LINE 與 IG 聯絡連結
+    useEffect(() => {
+        if (isOpen) {
+            const fetchLinks = async () => {
+                try {
+                    const res = await fetch('/api/v1/system-configs', {
+                        headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const line = data.find(c => c.configKey === 'LINE_LINK');
+                        const ig = data.find(c => c.configKey === 'IG_LINK');
+                        if (line && line.configValue) setLineLink(line.configValue);
+                        if (ig && ig.configValue) setIgLink(ig.configValue);
+                    }
+                } catch (e) {
+                    console.error('載入社群聯絡連結失敗，啟用本地預設回退設定。', e);
+                }
+            };
+            fetchLinks();
+        }
+    }, [isOpen]);
 
     // 計算購物車總金額
     const totalAmount = cart.reduce((sum, item) => {
@@ -326,15 +351,15 @@ export default function ShoppingCart({
                                     </div>
                                     <div className="contact-buttons-grid">
                                         <a 
-                                            href="https://line.me/ti/p/~wei750211" 
+                                            href={lineLink} 
                                             target="_blank" 
                                             rel="noopener noreferrer" 
                                             className="contact-btn contact-btn-line"
                                         >
-                                            💬 LINE 聯絡客服 (ID: wei750211)
+                                            💬 點此聯絡 LINE 客服
                                         </a>
                                         <a 
-                                            href="https://www.instagram.com/jwkl_cuisine/" 
+                                            href={igLink} 
                                             target="_blank" 
                                             rel="noopener noreferrer" 
                                             className="contact-btn contact-btn-ig"

@@ -12,6 +12,12 @@ const ConfigsTab = ({
     adminAboutText2,
     setAdminAboutText2,
     handleSaveAboutText2,
+    adminLineLink,
+    setAdminLineLink,
+    handleSaveLineLink,
+    adminIgLink,
+    setAdminIgLink,
+    handleSaveIgLink,
     faqList,
     isConfigsLoading,
     editingFaqId,
@@ -64,6 +70,30 @@ const ConfigsTab = ({
                             rows={3}
                         />
                         <button className="btn btn-primary btn-sm" onClick={handleSaveAboutText2} style={{ marginTop: '8px', width: 'auto' }}>儲存第二段</button>
+                    </div>
+
+                    <div className="form-group" style={{ borderTop: '1px dashed var(--color-border)', paddingTop: '16px' }}>
+                        <label className="form-label">LINE 客服聯絡連結</label>
+                        <input 
+                            type="text"
+                            className="form-control" 
+                            value={adminLineLink}
+                            onChange={(e) => setAdminLineLink(e.target.value)}
+                            placeholder="例如: https://line.me/ti/p/~wei750211"
+                        />
+                        <button className="btn btn-primary btn-sm" onClick={handleSaveLineLink} style={{ marginTop: '8px', width: 'auto' }}>儲存 LINE 連結</button>
+                    </div>
+
+                    <div className="form-group" style={{ borderTop: '1px dashed var(--color-border)', paddingTop: '16px' }}>
+                        <label className="form-label">Instagram 粉絲專頁網址</label>
+                        <input 
+                            type="text"
+                            className="form-control" 
+                            value={adminIgLink}
+                            onChange={(e) => setAdminIgLink(e.target.value)}
+                            placeholder="placeholder: https://www.instagram.com/jwkl_cuisine/"
+                        />
+                        <button className="btn btn-primary btn-sm" onClick={handleSaveIgLink} style={{ marginTop: '8px', width: 'auto' }}>儲存 IG 連結</button>
                     </div>
                 </div>
 
