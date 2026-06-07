@@ -35,7 +35,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
 
     // 歷史滾動與全域 activeSection 同步
     useEffect(() => {
-        if (activeSection && activeSection !== 'track') {
+        if (!isLoading && activeSection && activeSection !== 'track') {
             const element = document.getElementById(`section-${activeSection}`);
             if (element) {
                 const timer = setTimeout(() => {
@@ -44,7 +44,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                 return () => clearTimeout(timer);
             }
         }
-    }, [activeSection]);
+    }, [activeSection, isLoading]);
 
     useEffect(() => {
         const fetchData = async () => {
