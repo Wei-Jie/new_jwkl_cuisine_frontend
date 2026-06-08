@@ -3,6 +3,66 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { customFetch } from '../../utils/helpers';
 
+const compressAndConvertToWebP = (file) => {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/') || !window.HTMLCanvasElement) {
+            return resolve(file);
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1000;
+                const MAX_HEIGHT = 1000;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        resolve(file);
+                        return;
+                    }
+                    const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    const webpFile = new File([blob], `${rawName}.webp`, {
+                        type: 'image/webp',
+                        lastModified: Date.now()
+                    });
+                    resolve(webpFile);
+                }, 'image/webp', 0.82);
+            };
+            img.onerror = (err) => {
+                console.error("圖片載入失敗", err);
+                resolve(file);
+            };
+        };
+        reader.onerror = (err) => {
+            console.error("檔案讀取失敗", err);
+            resolve(file);
+        };
+    });
+};
+
 export function AddMenuModal({
     show,
     onClose,
@@ -112,21 +172,35 @@ export function AddMenuModal({
                                 onChange={(e) => setNewMenuForm({ ...newMenuForm, image_url: e.target.value })}
                                 style={{ flexGrow: 1 }}
                             />
-                            <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 12px', height: '48px', margin: 0, fontSize: '13px' }}>
-                                📁 上傳圖片
+                            <label 
+                                className="btn btn-outline" 
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    cursor: 'pointer', 
+                                    whiteSpace: 'nowrap', 
+                                    padding: '0 12px', 
+                                    height: '48px', 
+                                    margin: 0, 
+                                    fontSize: '13px',
+                                    pointerEvents: isUploading ? 'none' : 'auto',
+                                    opacity: isUploading ? 0.6 : 1
+                                }}
+                            >
+                                {isUploading ? '⏳ 上傳中...' : '📁 上傳圖片'}
                                 <input 
                                     type="file" 
                                     accept="image/*"
                                     onChange={async (e) => {
-                                        const file = e.target.files[0];
-                                        if (!file) return;
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            alert('上傳失敗：商品圖片大小不可超過 2MB！');
+                                        const rawFile = e.target.files[0];
+                                        if (!rawFile) return;
+                                        
+                                        if (rawFile.size > 20 * 1024 * 1024) {
+                                            alert('上傳失敗：圖片檔案過大（不可超過 20MB）！');
                                             return;
                                         }
-                                        const formData = new FormData();
-                                        formData.append('file', file);
-                                        
+
                                         const uploadStartTime = Date.now();
                                         setIsUploading(true);
                                         let uploadSuccess = false;
@@ -134,6 +208,15 @@ export function AddMenuModal({
                                         let uploadedUrl = '';
 
                                         try {
+                                            const file = await compressAndConvertToWebP(rawFile);
+                                            
+                                            if (file.size > 2 * 1024 * 1024) {
+                                                throw new Error('壓縮後的圖片大小仍超過 2MB！');
+                                            }
+
+                                            const formData = new FormData();
+                                            formData.append('file', file);
+                                            
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
                                                 headers: {
@@ -154,7 +237,7 @@ export function AddMenuModal({
                                             }
                                         } catch (err) {
                                             console.error(err);
-                                            uploadErrorMsg = '網路連線失敗，無法上傳圖片！';
+                                            uploadErrorMsg = err.message || '網路連線失敗，無法上傳圖片！';
                                         } finally {
                                             const elapsedTime = Date.now() - uploadStartTime;
                                             const minDelay = 1200;
@@ -176,9 +259,26 @@ export function AddMenuModal({
                                         }
                                     }}
                                     style={{ display: 'none' }}
+                                    disabled={isUploading}
                                 />
                             </label>
                         </div>
+                        {newMenuForm.image_url && (
+                            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>圖片預覽：</span>
+                                <img 
+                                    key={newMenuForm.image_url}
+                                    src={newMenuForm.image_url.startsWith('http') || newMenuForm.image_url.startsWith('/') || newMenuForm.image_url.startsWith('pic/') 
+                                        ? (newMenuForm.image_url.startsWith('pic/') ? '/' + newMenuForm.image_url : newMenuForm.image_url) 
+                                        : ''} 
+                                    alt="圖片預覽" 
+                                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                     <div className="modal-footer">
                         <button type="submit" className="btn btn-primary" disabled={isUploading}>確認新增</button>
@@ -310,21 +410,35 @@ export function EditMenuModal({
                                 onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
                                 style={{ flexGrow: 1 }}
                             />
-                            <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 12px', height: '48px', margin: 0, fontSize: '13px' }}>
-                                📁 上傳圖片
+                            <label 
+                                className="btn btn-outline" 
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    cursor: 'pointer', 
+                                    whiteSpace: 'nowrap', 
+                                    padding: '0 12px', 
+                                    height: '48px', 
+                                    margin: 0, 
+                                    fontSize: '13px',
+                                    pointerEvents: isUploading ? 'none' : 'auto',
+                                    opacity: isUploading ? 0.6 : 1
+                                }}
+                            >
+                                {isUploading ? '⏳ 上傳中...' : '📁 上傳圖片'}
                                 <input 
                                     type="file" 
                                     accept="image/*"
                                     onChange={async (e) => {
-                                        const file = e.target.files[0];
-                                        if (!file) return;
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            alert('上傳失敗：商品圖片大小不可超過 2MB！');
+                                        const rawFile = e.target.files[0];
+                                        if (!rawFile) return;
+                                        
+                                        if (rawFile.size > 20 * 1024 * 1024) {
+                                            alert('上傳失敗：圖片檔案過大（不可超過 20MB）！');
                                             return;
                                         }
-                                        const formData = new FormData();
-                                        formData.append('file', file);
-                                        
+
                                         const uploadStartTime = Date.now();
                                         setIsUploading(true);
                                         let uploadSuccess = false;
@@ -332,6 +446,15 @@ export function EditMenuModal({
                                         let uploadedUrl = '';
 
                                         try {
+                                            const file = await compressAndConvertToWebP(rawFile);
+                                            
+                                            if (file.size > 2 * 1024 * 1024) {
+                                                throw new Error('壓縮後的圖片大小仍超過 2MB！');
+                                            }
+
+                                            const formData = new FormData();
+                                            formData.append('file', file);
+                                            
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
                                                 headers: {
@@ -352,7 +475,7 @@ export function EditMenuModal({
                                             }
                                         } catch (err) {
                                             console.error(err);
-                                            uploadErrorMsg = '網路連線失敗，無法上傳圖片！';
+                                            uploadErrorMsg = err.message || '網路連線失敗，無法上傳圖片！';
                                         } finally {
                                             const elapsedTime = Date.now() - uploadStartTime;
                                             const minDelay = 1200;
@@ -374,9 +497,26 @@ export function EditMenuModal({
                                         }
                                     }}
                                     style={{ display: 'none' }}
+                                    disabled={isUploading}
                                 />
                             </label>
                         </div>
+                        {editingProduct.image_url && (
+                            <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>圖片預覽：</span>
+                                <img 
+                                    key={editingProduct.image_url}
+                                    src={editingProduct.image_url.startsWith('http') || editingProduct.image_url.startsWith('/') || editingProduct.image_url.startsWith('pic/') 
+                                        ? (editingProduct.image_url.startsWith('pic/') ? '/' + editingProduct.image_url : editingProduct.image_url) 
+                                        : ''} 
+                                    alt="圖片預覽" 
+                                    style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                    }}
+                                />
+                            </div>
+                        )}
                     </div>
                     <div className="form-group">
                         <label className="form-label" style={{ marginBottom: '8px', display: 'block' }}>商品狀態</label>
