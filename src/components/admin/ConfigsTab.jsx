@@ -284,18 +284,18 @@ const ConfigsTab = ({
                                 <button type="button" className="btn btn-outline" onClick={() => setShowAddFaqModal(false)} disabled={isUploading}>取消</button>
                             </div>
                         </form>
-                        {isUploading && (
-                            <div className="upload-loading-overlay">
-                                <div className="upload-loading-card">
-                                    <img src="/pic/chef_mascot_transparent.png" className="mascot-uploading" alt="上傳中" />
-                                    <div className="upload-loading-text">美味圖片上傳中，請稍候...</div>
-                                    <div className="upload-loading-bar-container">
-                                        <div className="upload-loading-bar-fill"></div>
-                                    </div>
+                    </div>
+                    {isUploading && (
+                        <div className="upload-loading-overlay">
+                            <div className="upload-loading-card">
+                                <img src="/pic/chef_mascot_transparent.png" className="mascot-uploading" alt="上傳中" />
+                                <div className="upload-loading-text">美味圖片上傳中，請稍候...</div>
+                                <div className="upload-loading-bar-container">
+                                    <div className="upload-loading-bar-fill"></div>
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>,
                 document.body
             )}
