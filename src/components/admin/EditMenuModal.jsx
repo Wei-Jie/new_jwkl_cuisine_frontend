@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { customFetch } from '../../utils/helpers';
 
 export function AddMenuModal({
     show,
@@ -101,12 +102,58 @@ export function AddMenuModal({
                     </div>
                     <div className="form-group">
                         <label className="form-label">圖片網址 / 位置 (如 pic/P1001.jpg)</label>
-                        <input 
-                            type="text" 
-                            className="form-control" 
-                            value={newMenuForm.image_url}
-                            onChange={(e) => setNewMenuForm({ ...newMenuForm, image_url: e.target.value })}
-                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input 
+                                type="text" 
+                                className="form-control" 
+                                value={newMenuForm.image_url}
+                                onChange={(e) => setNewMenuForm({ ...newMenuForm, image_url: e.target.value })}
+                                style={{ flexGrow: 1 }}
+                            />
+                            <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 12px', height: '48px', margin: 0, fontSize: '13px' }}>
+                                📁 上傳圖片
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+                                        
+                                        try {
+                                            const res = await customFetch('/api/v1/upload', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                                                },
+                                                body: formData
+                                            });
+                                            if (res.ok) {
+                                                const data = await res.json();
+                                                if (data.status === 'success') {
+                                                    setNewMenuForm({ 
+                                                        ...newMenuForm, 
+                                                        image_url: data.url,
+                                                        image_filename: data.url
+                                                    });
+                                                    alert('商品圖片上傳成功！');
+                                                } else {
+                                                    alert('上傳失敗：' + (data.message || '未知錯誤'));
+                                                }
+                                            } else {
+                                                const errTxt = await res.text();
+                                                alert('上傳失敗，錯誤：' + errTxt);
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert('網路連線失敗，無法上傳圖片！');
+                                        }
+                                    }}
+                                    style={{ display: 'none' }}
+                                />
+                            </label>
+                        </div>
                     </div>
                     <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">確認新增</button>
@@ -217,12 +264,58 @@ export function EditMenuModal({
                     </div>
                     <div className="form-group">
                         <label className="form-label">圖片網址 / 位置 (如 pic/P1001.jpg)</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={editingProduct.image_url || ''}
-                            onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
-                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={editingProduct.image_url || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                                style={{ flexGrow: 1 }}
+                            />
+                            <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 12px', height: '48px', margin: 0, fontSize: '13px' }}>
+                                📁 上傳圖片
+                                <input 
+                                    type="file" 
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        const formData = new FormData();
+                                        formData.append('file', file);
+                                        
+                                        try {
+                                            const res = await customFetch('/api/v1/upload', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                                                },
+                                                body: formData
+                                            });
+                                            if (res.ok) {
+                                                const data = await res.json();
+                                                if (data.status === 'success') {
+                                                    setEditingProduct({ 
+                                                        ...editingProduct, 
+                                                        image_url: data.url,
+                                                        image_filename: data.url
+                                                    });
+                                                    alert('商品圖片上傳成功！');
+                                                } else {
+                                                    alert('上傳失敗：' + (data.message || '未知錯誤'));
+                                                }
+                                            } else {
+                                                const errTxt = await res.text();
+                                                alert('上傳失敗，錯誤：' + errTxt);
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert('網路連線失敗，無法上傳圖片！');
+                                        }
+                                    }}
+                                    style={{ display: 'none' }}
+                                />
+                            </label>
+                        </div>
                     </div>
                     <div className="form-group">
                         <label className="form-label" style={{ marginBottom: '8px', display: 'block' }}>商品狀態</label>

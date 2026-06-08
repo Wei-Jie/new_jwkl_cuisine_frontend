@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { customFetch } from '../../utils/helpers';
 
 const ConfigsTab = ({
     adminAnnouncement,
@@ -195,16 +196,59 @@ const ConfigsTab = ({
                             </div>
                             <div className="form-group">
                                 <label className="form-label">說明圖片網址 (選填)</label>
-                                <input 
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="pic/faq_detail.jpg 或是網址"
-                                    value={editingFaqId ? editingFaq.imageUrl : newFaqForm.imageUrl}
-                                    onChange={(e) => {
-                                        if (editingFaqId) setEditingFaq({ ...editingFaq, imageUrl: e.target.value });
-                                        else setNewFaqForm({ ...newFaqForm, imageUrl: e.target.value });
-                                    }}
-                                />
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input 
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="pic/faq_detail.jpg 或是網址"
+                                        value={editingFaqId ? editingFaq.imageUrl : newFaqForm.imageUrl}
+                                        onChange={(e) => {
+                                            if (editingFaqId) setEditingFaq({ ...editingFaq, imageUrl: e.target.value });
+                                            else setNewFaqForm({ ...newFaqForm, imageUrl: e.target.value });
+                                        }}
+                                        style={{ flexGrow: 1 }}
+                                    />
+                                    <label className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0 12px', height: '48px', margin: 0, fontSize: '13px' }}>
+                                        📁 上傳圖片
+                                        <input 
+                                            type="file" 
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                const formData = new FormData();
+                                                formData.append('file', file);
+                                                
+                                                try {
+                                                    const res = await customFetch('/api/v1/upload', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                                                        },
+                                                        body: formData
+                                                    });
+                                                    if (res.ok) {
+                                                        const data = await res.json();
+                                                        if (data.status === 'success') {
+                                                            if (editingFaqId) setEditingFaq({ ...editingFaq, imageUrl: data.url });
+                                                            else setNewFaqForm({ ...newFaqForm, imageUrl: data.url });
+                                                            alert('圖片上傳成功！');
+                                                        } else {
+                                                            alert('上傳失敗：' + (data.message || '未知錯誤'));
+                                                        }
+                                                    } else {
+                                                        const errTxt = await res.text();
+                                                        alert('上傳失敗，錯誤：' + errTxt);
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert('網路連線失敗，無法上傳圖片！');
+                                                }
+                                            }}
+                                            style={{ display: 'none' }}
+                                        />
+                                    </label>
+                                </div>
                                 <small style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: '1.5' }}>
                                     💡 提示：支援專案本機路徑（如 <code>pic/filename.jpg</code>）或外部直接圖片網址。<br />
                                     若使用 Google Drive 圖片，請將分享連結的 <b>檔案ID</b> 代入以下直連格式：<br />
