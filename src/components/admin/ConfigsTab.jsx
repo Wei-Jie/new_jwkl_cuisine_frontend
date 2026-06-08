@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { customFetch } from '../../utils/helpers';
@@ -33,6 +33,7 @@ const ConfigsTab = ({
     handleDeleteFaq,
     handleSaveFaq
 }) => {
+    const [isUploading, setIsUploading] = useState(false);
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
@@ -216,9 +217,14 @@ const ConfigsTab = ({
                                             onChange={async (e) => {
                                                 const file = e.target.files[0];
                                                 if (!file) return;
+                                                if (file.size > 2 * 1024 * 1024) {
+                                                    alert('上傳失敗：圖片檔案不可超過 2MB！');
+                                                    return;
+                                                }
                                                 const formData = new FormData();
                                                 formData.append('file', file);
                                                 
+                                                setIsUploading(true);
                                                 try {
                                                     const res = await customFetch('/api/v1/upload', {
                                                         method: 'POST',
@@ -243,6 +249,8 @@ const ConfigsTab = ({
                                                 } catch (err) {
                                                     console.error(err);
                                                     alert('網路連線失敗，無法上傳圖片！');
+                                                } finally {
+                                                    setIsUploading(false);
                                                 }
                                             }}
                                             style={{ display: 'none' }}
@@ -256,10 +264,21 @@ const ConfigsTab = ({
                                 </small>
                             </div>
                             <div className="modal-footer" style={{ marginTop: '10px' }}>
-                                <button type="submit" className="btn btn-primary">儲存問答</button>
-                                <button type="button" className="btn btn-outline" onClick={() => setShowAddFaqModal(false)}>取消</button>
+                                <button type="submit" className="btn btn-primary" disabled={isUploading}>儲存問答</button>
+                                <button type="button" className="btn btn-outline" onClick={() => setShowAddFaqModal(false)} disabled={isUploading}>取消</button>
                             </div>
                         </form>
+                        {isUploading && (
+                            <div className="upload-loading-overlay">
+                                <div className="upload-loading-card">
+                                    <img src="/pic/chef_mascot_transparent.png" className="mascot-uploading" alt="上傳中" />
+                                    <div className="upload-loading-text">美味圖片上傳中，請稍候...</div>
+                                    <div className="upload-loading-bar-container">
+                                        <div className="upload-loading-bar-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>,
                 document.body

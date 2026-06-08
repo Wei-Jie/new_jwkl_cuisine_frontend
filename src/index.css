@@ -701,3 +701,107 @@ select.form-control-sm {
     gap: 12px;
   }
 }
+
+/* ========================================================
+   [最新優化] 圖片上傳專用：去背廚師吉祥物動畫 Loading 遮罩
+   ======================================================= */
+.upload-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(28, 25, 23, 0.65); /* 帶有 stone-900 暖褐色底色 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* 超高層級覆蓋所有 Modal */
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.upload-loading-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(0);
+  animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 快樂小灶廚師端菜：搖擺與呼吸發光複合動畫 */
+@keyframes chef-sway {
+  0%, 100% {
+    transform: translateY(0) rotate(-4deg) scale(1);
+  }
+  50% {
+    transform: translateY(-16px) rotate(4deg) scale(1.05);
+  }
+}
+
+@keyframes chef-glow {
+  0%, 100% {
+    filter: drop-shadow(0 4px 12px rgba(217, 119, 6, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 12px 30px rgba(217, 119, 6, 0.75));
+  }
+}
+
+.mascot-uploading {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 24px;
+  will-change: transform, filter;
+  animation: chef-sway 1.8s ease-in-out infinite, chef-glow 2.2s ease-in-out infinite;
+}
+
+.upload-loading-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+/* 進度條外殼 */
+.upload-loading-bar-container {
+  width: 100%;
+  height: 6px;
+  background-color: var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 進度條填充：滑動動畫 */
+@keyframes bar-slide {
+  0% {
+    left: -40%;
+    width: 30%;
+  }
+  50% {
+    width: 40%;
+  }
+  100% {
+    left: 110%;
+    width: 30%;
+  }
+}
+
+.upload-loading-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), #fb923c);
+  border-radius: 10px;
+  animation: bar-slide 1.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+

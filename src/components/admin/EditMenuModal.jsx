@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { customFetch } from '../../utils/helpers';
@@ -10,11 +10,13 @@ export function AddMenuModal({
     setNewMenuForm,
     onSubmit
 }) {
+    const [isUploading, setIsUploading] = useState(false);
+
     if (!show) return null;
 
     return createPortal(
         <div className="modal-overlay">
-            <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', margin: 'auto' }}>
+            <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', margin: 'auto', position: 'relative' }}>
                 <div className="modal-header">
                     <h3>➕ 新增菜單商品</h3>
                     <button className="modal-close" onClick={onClose}><X size={20} /></button>
@@ -118,9 +120,14 @@ export function AddMenuModal({
                                     onChange={async (e) => {
                                         const file = e.target.files[0];
                                         if (!file) return;
+                                        if (file.size > 2 * 1024 * 1024) {
+                                            alert('上傳失敗：商品圖片大小不可超過 2MB！');
+                                            return;
+                                        }
                                         const formData = new FormData();
                                         formData.append('file', file);
                                         
+                                        setIsUploading(true);
                                         try {
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
@@ -148,6 +155,8 @@ export function AddMenuModal({
                                         } catch (err) {
                                             console.error(err);
                                             alert('網路連線失敗，無法上傳圖片！');
+                                        } finally {
+                                            setIsUploading(false);
                                         }
                                     }}
                                     style={{ display: 'none' }}
@@ -156,10 +165,21 @@ export function AddMenuModal({
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">確認新增</button>
-                        <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
+                        <button type="submit" className="btn btn-primary" disabled={isUploading}>確認新增</button>
+                        <button type="button" className="btn btn-outline" onClick={onClose} disabled={isUploading}>取消</button>
                     </div>
                 </form>
+                {isUploading && (
+                    <div className="upload-loading-overlay">
+                        <div className="upload-loading-card">
+                            <img src="/pic/chef_mascot_transparent.png" className="mascot-uploading" alt="上傳中" />
+                            <div className="upload-loading-text">美味圖片上傳中，請稍候...</div>
+                            <div className="upload-loading-bar-container">
+                                <div className="upload-loading-bar-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>,
         document.body
@@ -173,11 +193,13 @@ export function EditMenuModal({
     setEditingProduct,
     onSubmit
 }) {
+    const [isUploading, setIsUploading] = useState(false);
+
     if (!show) return null;
 
     return createPortal(
         <div className="modal-overlay">
-            <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto', margin: 'auto' }}>
+            <div className="modal-container card" style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto', margin: 'auto', position: 'relative' }}>
                 <div className="modal-header">
                     <h3>✏️ 編輯菜單商品</h3>
                     <button className="modal-close" onClick={onClose}><X size={20} /></button>
@@ -280,9 +302,14 @@ export function EditMenuModal({
                                     onChange={async (e) => {
                                         const file = e.target.files[0];
                                         if (!file) return;
+                                        if (file.size > 2 * 1024 * 1024) {
+                                            alert('上傳失敗：商品圖片大小不可超過 2MB！');
+                                            return;
+                                        }
                                         const formData = new FormData();
                                         formData.append('file', file);
                                         
+                                        setIsUploading(true);
                                         try {
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
@@ -310,6 +337,8 @@ export function EditMenuModal({
                                         } catch (err) {
                                             console.error(err);
                                             alert('網路連線失敗，無法上傳圖片！');
+                                        } finally {
+                                            setIsUploading(false);
                                         }
                                     }}
                                     style={{ display: 'none' }}
@@ -334,6 +363,7 @@ export function EditMenuModal({
                                     backgroundColor: editingProduct.status === '上架' ? '#dcfce7' : '#ffffff',
                                     color: editingProduct.status === '上架' ? '#15803d' : '#374151'
                                 }}
+                                disabled={isUploading}
                             >
                                 上架
                             </button>
@@ -351,14 +381,15 @@ export function EditMenuModal({
                                     backgroundColor: editingProduct.status === '下架' ? '#fee2e2' : '#ffffff',
                                     color: editingProduct.status === '下架' ? '#b91c1c' : '#374151'
                                 }}
+                                disabled={isUploading}
                             >
                                 下架
                             </button>
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">儲存修改</button>
-                        <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
+                        <button type="submit" className="btn btn-primary" disabled={isUploading}>儲存修改</button>
+                        <button type="button" className="btn btn-outline" onClick={onClose} disabled={isUploading}>取消</button>
                     </div>
                 </form>
             </div>
