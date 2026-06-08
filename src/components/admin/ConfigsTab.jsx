@@ -224,7 +224,12 @@ const ConfigsTab = ({
                                                 const formData = new FormData();
                                                 formData.append('file', file);
                                                 
+                                                const uploadStartTime = Date.now();
                                                 setIsUploading(true);
+                                                let uploadSuccess = false;
+                                                let uploadErrorMsg = '';
+                                                let uploadedUrl = '';
+
                                                 try {
                                                     const res = await customFetch('/api/v1/upload', {
                                                         method: 'POST',
@@ -236,21 +241,32 @@ const ConfigsTab = ({
                                                     if (res.ok) {
                                                         const data = await res.json();
                                                         if (data.status === 'success') {
-                                                            if (editingFaqId) setEditingFaq({ ...editingFaq, imageUrl: data.url });
-                                                            else setNewFaqForm({ ...newFaqForm, imageUrl: data.url });
-                                                            alert('圖片上傳成功！');
+                                                            uploadedUrl = data.url;
+                                                            uploadSuccess = true;
                                                         } else {
-                                                            alert('上傳失敗：' + (data.message || '未知錯誤'));
+                                                            uploadErrorMsg = data.message || '未知錯誤';
                                                         }
                                                     } else {
-                                                        const errTxt = await res.text();
-                                                        alert('上傳失敗，錯誤：' + errTxt);
+                                                        uploadErrorMsg = await res.text();
                                                     }
                                                 } catch (err) {
                                                     console.error(err);
-                                                    alert('網路連線失敗，無法上傳圖片！');
+                                                    uploadErrorMsg = '網路連線失敗，無法上傳圖片！';
                                                 } finally {
+                                                    const elapsedTime = Date.now() - uploadStartTime;
+                                                    const minDelay = 1200;
+                                                    if (elapsedTime < minDelay) {
+                                                        await new Promise(resolve => setTimeout(resolve, minDelay - elapsedTime));
+                                                    }
                                                     setIsUploading(false);
+
+                                                    if (uploadSuccess) {
+                                                        if (editingFaqId) setEditingFaq({ ...editingFaq, imageUrl: uploadedUrl });
+                                                        else setNewFaqForm({ ...newFaqForm, imageUrl: uploadedUrl });
+                                                        setTimeout(() => alert('圖片上傳成功！'), 100);
+                                                    } else if (uploadErrorMsg) {
+                                                        setTimeout(() => alert('上傳失敗：' + uploadErrorMsg), 100);
+                                                    }
                                                 }
                                             }}
                                             style={{ display: 'none' }}
