@@ -32,10 +32,27 @@ export const makeNoteStr = (pureNote, cost) => {
     }
 };
 
-export const customFetch = (url, options) => {
+export const customFetch = (url, options = {}) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const targetUrl = (url && url.startsWith('/api')) ? `${baseUrl}${url}` : url;
-    return fetch(targetUrl, options);
+    
+    // 如果本地有暫存的管理金鑰，自動帶入 Headers
+    const adminKey = sessionStorage.getItem('admin_api_key');
+    if (adminKey) {
+        options.headers = {
+            ...options.headers,
+            'X-API-KEY': adminKey
+        };
+    }
+    
+    return fetch(targetUrl, options).then(res => {
+        if (res.status === 401 && sessionStorage.getItem('admin_api_key')) {
+            sessionStorage.removeItem('admin_api_key');
+            alert('您的管理金鑰已失效，請重新登入！');
+            window.location.reload();
+        }
+        return res;
+    });
 };
 
 export const formatVIPPhone = (phone) => {

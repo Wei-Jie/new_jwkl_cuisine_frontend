@@ -219,9 +219,7 @@ export function AddMenuModal({
                                             
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
-                                                headers: {
-                                                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
-                                                },
+                                                headers: {},
                                                 body: formData
                                             });
                                             if (res.ok) {
@@ -457,9 +455,7 @@ export function EditMenuModal({
                                             
                                             const res = await customFetch('/api/v1/upload', {
                                                 method: 'POST',
-                                                headers: {
-                                                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
-                                                },
+                                                headers: {},
                                                 body: formData
                                             });
                                             if (res.ok) {

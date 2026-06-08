@@ -5,32 +5,64 @@ import './SitePasswordGate.css';
 export default function SitePasswordGate({ children }) {
     const [password, setPassword] = useState('');
     const [isUnlocked, setIsUnlocked] = useState(
-        localStorage.getItem('site_unlocked') === 'true'
+        !!sessionStorage.getItem('admin_api_key')
     );
+    const [isCheckingKey, setIsCheckingKey] = useState(false);
     const [error, setError] = useState('');
     const [isShaking, setIsShaking] = useState(false);
 
-    const handleUnlock = (e) => {
+    const handleUnlock = async (e) => {
         e.preventDefault();
-        
-        // 從環境變數中取得解鎖密碼，預設為 'jwkl888'
-        const correctPassword = import.meta.env.VITE_SITE_PASSWORD || 'jwkl888';
+        const trimmedPassword = password.trim();
+        if (!trimmedPassword) {
+            setError('請輸入管理金鑰！');
+            return;
+        }
 
-        if (password === correctPassword) {
-            setIsUnlocked(true);
-            localStorage.setItem('site_unlocked', 'true');
-            setError('');
-        } else {
-            setError('解鎖金鑰不正確，請重新輸入！');
+        setIsCheckingKey(true);
+        setError('');
+        
+        try {
+            // 用使用者輸入的密碼作為金鑰，向後端發送測試請求
+            const testUrl = '/api/v1/menus/all';
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+            const targetUrl = testUrl.startsWith('/api') ? `${baseUrl}${testUrl}` : testUrl;
+            
+            const res = await fetch(targetUrl, {
+                headers: {
+                    'X-API-KEY': trimmedPassword
+                }
+            });
+
+            if (res.ok) {
+                // 驗證成功！
+                setIsUnlocked(true);
+                sessionStorage.setItem('admin_api_key', trimmedPassword);
+                setError('');
+            } else if (res.status === 401) {
+                setError('金鑰驗證失敗，管理金鑰無效！');
+                setIsShaking(true);
+                setPassword('');
+                setTimeout(() => setIsShaking(false), 500);
+            } else {
+                setError(`驗證出錯 (HTTP ${res.status})，請確認後端狀態！`);
+                setIsShaking(true);
+                setTimeout(() => setIsShaking(false), 500);
+            }
+        } catch (err) {
+            console.error("驗證金鑰時發生連線錯誤:", err);
+            setError('網路連線失敗，無法連線至後端進行驗證！');
             setIsShaking(true);
-            setPassword('');
-            setTimeout(() => setIsShaking(false), 500); // 抖動完畢重置狀態
+            setTimeout(() => setIsShaking(false), 500);
+        } finally {
+            setIsCheckingKey(false);
         }
     };
 
     const handleLock = () => {
         setIsUnlocked(false);
-        localStorage.removeItem('site_unlocked');
+        sessionStorage.removeItem('admin_api_key');
+        window.location.reload(); // 重新整理頁面以乾淨清空狀態與變數
     };
 
     if (isUnlocked) {
@@ -41,7 +73,7 @@ export default function SitePasswordGate({ children }) {
                     <span className="admin-badge">
                         <Unlock size={14} /> 系統管理模式已開啟
                     </span>
-                    <button className="lock-btn" onClick={handleLock}>
+                    <button className="lock-btn" onClick={handleLock} disabled={isCheckingKey}>
                         🔒 退出管理後台
                     </button>
                 </div>
@@ -71,6 +103,7 @@ export default function SitePasswordGate({ children }) {
                             onChange={(e) => setPassword(e.target.value)}
                             className="gate-input"
                             autoFocus
+                            disabled={isCheckingKey}
                         />
                     </div>
 
@@ -81,8 +114,8 @@ export default function SitePasswordGate({ children }) {
                         </div>
                     )}
 
-                    <button type="submit" className="btn btn-primary gate-submit-btn">
-                        <Unlock size={16} /> 驗證並解鎖後台
+                    <button type="submit" className="btn btn-primary gate-submit-btn" disabled={isCheckingKey}>
+                        <Unlock size={16} /> {isCheckingKey ? '驗證金鑰中...' : '驗證並解鎖後台'}
                     </button>
                 </form>
 

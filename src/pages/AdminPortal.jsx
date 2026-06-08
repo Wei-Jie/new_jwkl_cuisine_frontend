@@ -158,7 +158,7 @@ export default function AdminPortal() {
     const fetchOrders = async () => {
         setIsOrdersLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const res = await customFetch('/api/v1/orders/all', config);
             if (res.ok) {
                 const data = await res.json();
@@ -189,7 +189,7 @@ export default function AdminPortal() {
     const fetchOrdersWithFilters = async (statusVal = filterStatus, startVal = filterStartDate, endVal = filterEndDate) => {
         setIsOrdersLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const params = new URLSearchParams();
             if (statusVal && statusVal !== '全部') {
                 params.append('status', statusVal);
@@ -230,7 +230,7 @@ export default function AdminPortal() {
     const fetchOrderItems = async () => {
         setIsOrderItemsLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const res = await customFetch('/api/v1/orders/items/all', config);
             if (res.ok) {
                 const data = await res.json();
@@ -246,7 +246,7 @@ export default function AdminPortal() {
     const fetchMenuList = async () => {
         setIsMenuLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const res = await customFetch('/api/v1/menus/all', config);
             const data = await res.json();
             const normalized = data.map(m => ({
@@ -276,7 +276,7 @@ export default function AdminPortal() {
     const fetchExpenses = async () => {
         setIsExpensesLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const res = await customFetch('/api/v1/expenses', config);
             const data = await res.json();
             const normalized = data.map(e => ({
@@ -299,7 +299,7 @@ export default function AdminPortal() {
 
     const fetchAdminConfigsAndFaqs = async () => {
         setIsConfigsLoading(true);
-        const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+        const config = { headers: {} };
         try {
             const resConf = await customFetch('/api/v1/system-configs', config);
             if (resConf.ok) {
@@ -550,8 +550,7 @@ export default function AdminPortal() {
             const itemsConfig = {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(itemsPayload)
             };
@@ -565,8 +564,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(backendPayload)
             };
@@ -602,7 +600,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'PUT',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已接單')}`, config);
             if (res.ok) {
@@ -622,7 +620,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'PUT',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             const res = await customFetch(`/api/v1/orders/${orderId}/status?status=${encodeURIComponent('已退回')}`, config);
             if (res.ok) {
@@ -644,7 +642,7 @@ export default function AdminPortal() {
     useEffect(() => {
         const fetchMenu = async () => {
             try {
-                const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+                const config = { headers: {} };
                 const res = await customFetch('/api/v1/menus', config);
                 const data = await res.json();
                 const names = [...new Set(data.map(m => m.name).filter(Boolean))].sort();
@@ -661,7 +659,7 @@ export default function AdminPortal() {
         if (!pNames || pNames.length === 0) return;
         setIsSmiLoading(true);
         try {
-            const config = { headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' } };
+            const config = { headers: {} };
             const promises = pNames.map(async (name) => {
                 const res = await customFetch(`/api/v1/orders/items/by-product?productName=${encodeURIComponent(name)}`, config);
                 if (res.ok) return await res.json();
@@ -808,8 +806,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 }
             };
 
@@ -860,8 +857,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(backendPayload)
             };
@@ -901,8 +897,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(backendPayload)
             };
@@ -965,8 +960,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
             };
@@ -1007,7 +1001,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'DELETE',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             await customFetch(`/api/v1/expenses/${id}`, config);
             alert('支出明細刪除成功！');
@@ -1216,7 +1210,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'POST',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             const res = await customFetch(`/api/v1/menus/${selectedInvProduct}/stock/add?qty=${invAddQty}`, config);
             if (res.ok) {
@@ -1239,7 +1233,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'PUT',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             const res = await customFetch(`/api/v1/menus/${productId}/stock?stock=${currentStock}&isStockManaged=${isManaged}`, config);
             if (res.ok) {
@@ -1268,7 +1262,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'PUT',
                 headers: { 
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365',
+                    
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
@@ -1296,8 +1290,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     configKey: 'SHOP_ANNOUNCEMENT',
@@ -1317,8 +1310,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     configKey: 'ABOUT_TEXT_1',
@@ -1338,8 +1330,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     configKey: 'ABOUT_TEXT_2',
@@ -1359,8 +1350,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     configKey: 'LINE_LINK',
@@ -1380,8 +1370,7 @@ export default function AdminPortal() {
             const config = {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     configKey: 'IG_LINK',
@@ -1403,8 +1392,7 @@ export default function AdminPortal() {
             const config = {
                 method: editingFaqId ? 'PUT' : 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': 'jeff-winnie-kaia-luck-13365'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(faqPayload)
             };
@@ -1430,7 +1418,7 @@ export default function AdminPortal() {
         try {
             const config = {
                 method: 'DELETE',
-                headers: { 'X-API-KEY': 'jeff-winnie-kaia-luck-13365' }
+                headers: {}
             };
             const res = await customFetch(`/api/v1/faqs/${id}`, config);
             if (!res.ok) {
