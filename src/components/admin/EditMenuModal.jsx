@@ -248,7 +248,7 @@ export function AddMenuModal({
                                                 setNewMenuForm({ 
                                                     ...newMenuForm, 
                                                     image_url: uploadedUrl,
-                                                    image_filename: uploadedUrl
+                                                    image_filename: uploadedUrl.substring(uploadedUrl.lastIndexOf('/') + 1)
                                                 });
                                                 setTimeout(() => alert('商品圖片上傳成功！'), 100);
                                             } else if (uploadErrorMsg) {
@@ -484,7 +484,7 @@ export function EditMenuModal({
                                                 setEditingProduct({ 
                                                     ...editingProduct, 
                                                     image_url: uploadedUrl,
-                                                    image_filename: uploadedUrl
+                                                    image_filename: uploadedUrl.substring(uploadedUrl.lastIndexOf('/') + 1)
                                                 });
                                                 setTimeout(() => alert('商品圖片上傳成功！'), 100);
                                             } else if (uploadErrorMsg) {
