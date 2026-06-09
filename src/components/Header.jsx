@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart as CartIcon, Search, UserCheck } from 'lucide-react';
+import { ShoppingCart as CartIcon, UserCheck } from 'lucide-react';
 import './Header.css';
 
 export default function Header({
@@ -11,7 +11,25 @@ export default function Header({
 }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const isUnlocked = localStorage.getItem('site_unlocked') === 'true';
+
+    // 讀取 sessionStorage 中的管理金鑰，判斷是否已登入後台
+    const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(
+        () => !!sessionStorage.getItem('admin_api_key')
+    );
+
+    // 監聽 storage 事件，讓登入/登出後導航列即時更新
+    useEffect(() => {
+        const handleStorageChange = () => {
+            setIsAdminLoggedIn(!!sessionStorage.getItem('admin_api_key'));
+        };
+        window.addEventListener('storage', handleStorageChange);
+        // 同時定期輪詢，因為 sessionStorage 的 storage 事件在同一分頁不觸發
+        const timer = setInterval(handleStorageChange, 1000);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            clearInterval(timer);
+        };
+    }, []);
 
     const navItems = [
         { id: 'about', label: '🥘 關於小灶' },
@@ -61,8 +79,8 @@ export default function Header({
                         </button>
                     ))}
                     
-                    {/* 管理員快速切換通道 (僅在已解鎖時顯示) */}
-                    {isUnlocked && (
+                    {/* 管理員快速切換通道 (已登入後台時才顯示) */}
+                    {isAdminLoggedIn && (
                         <Link to="/admin-portal-xyz" className="nav-link-btn admin-quick-link">
                             <UserCheck size={14} /> 後台管理
                         </Link>
