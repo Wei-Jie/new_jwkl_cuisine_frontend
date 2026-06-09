@@ -184,7 +184,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     backgroundImage: 'url(pic/hero_banner.png)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    opacity: 0.08,
+                    opacity: 0.03,
                     zIndex: 0,
                     pointerEvents: 'none'
                 }} />
