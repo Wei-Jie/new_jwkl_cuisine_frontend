@@ -805,3 +805,47 @@ select.form-control-sm {
   animation: bar-slide 1.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ========================================================
+   [最新優化] 關於小灶 (About Section) 的自適應背景與遮罩
+   ======================================================== */
+.about-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(pic/hero_banner.png);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.20;
+  z-index: 0;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.about-bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* 電腦版：從左向右的漸層，保護左側多字區域 */
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0.35) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 手機與平板版 (螢幕小於等於 768px) */
+@media (max-width: 768px) {
+  .about-bg-image {
+    /* 手機版將背景圖不透明度降低，減少圖案干擾 */
+    opacity: 0.06;
+    filter: blur(4px);
+  }
+  .about-bg-overlay {
+    /* 手機版文字會填滿寬度，使用全面積的高對比白底保護文字 */
+    background: rgba(255, 255, 255, 0.94);
+  }
+}
+
+
