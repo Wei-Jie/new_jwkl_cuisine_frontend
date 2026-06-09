@@ -253,7 +253,8 @@ export default function AdminPortal() {
                 ...m,
                 product_id: m.productId || m.product_id,
                 min_qty: m.minQty || m.min_qty || 1,
-                image_filename: m.imageFilename || m.image_filename
+                image_filename: m.imageFilename || m.image_filename,
+                image_url: m.imageUrl || m.image_url
             }));
             setMenuList(normalized);
         } catch (err) {
@@ -850,7 +851,7 @@ export default function AdminPortal() {
             description: editingProduct.description,
             note: finalNote,
             imageFilename: editingProduct.image_filename,
-            imageUrl: editingProduct.image_url,
+            imageUrl: editingProduct.image_url || editingProduct.imageUrl,
             status: editingProduct.status
         };
         try {

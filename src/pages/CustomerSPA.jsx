@@ -60,7 +60,8 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                         const normalized = dataMenu.map(m => ({
                             ...m,
                             product_id: m.productId || m.product_id,
-                            image_filename: m.imageFilename || m.image_filename
+                            image_filename: m.imageFilename || m.image_filename,
+                            image_url: m.imageUrl || m.image_url
                         }));
                         setMenuData(normalized.filter(m => m.status === '上架'));
                     } else {
@@ -210,9 +211,10 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     {filteredMenu.map(item => {
                         const isWeight = String(item.price).includes('*') || String(item.price).includes('重量');
                         const displayPrice = isWeight ? '秤重計價' : `$${item.price}`;
-                        const imgUrl = (item.image_filename && (item.image_filename.startsWith('http://') || item.image_filename.startsWith('https://'))) 
+                        const imgUrl = item.image_url || item.imageUrl || 
+                            ((item.image_filename && (item.image_filename.startsWith('http://') || item.image_filename.startsWith('https://'))) 
                             ? item.image_filename 
-                            : `pic/${item.image_filename}`;
+                            : `pic/${item.image_filename}`);
                         const defaultImg = 'https://placehold.jp/24/1a73e8/ffffff/400x300.png?text=小灶私廚%0A精製美食';
 
                         return (
