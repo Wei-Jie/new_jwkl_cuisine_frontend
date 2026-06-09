@@ -173,18 +173,35 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
             </div>
 
             {/* SECTION 1: 關於小灶 */}
-            <section id="section-about" className="card" style={{ marginTop: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                    <ChefHat size={32} className="text-primary" />
-                    <h2>小灶私廚：傳承溫潤的舌尖記憶</h2>
-                </div>
-                <div className="about-content" style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: 'var(--color-text-secondary)' }}>
-                    <p style={{ whiteSpace: 'pre-line' }}>{aboutText1}</p>
-                    <p style={{ whiteSpace: 'pre-line' }}>{aboutText2}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
-                        <span className="tag">🥘 每日手工限量</span>
-                        <span className="tag">🌿 當日新鮮食材</span>
-                        <span className="tag">❤️ 絕無人工添加</span>
+            <section id="section-about" className="card" style={{ marginTop: '8px', position: 'relative', overflow: 'hidden' }}>
+                {/* 背景裝飾圖，提供優雅的環境氛圍與質感 */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: 'url(pic/hero_banner.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: 0.08,
+                    zIndex: 0,
+                    pointerEvents: 'none'
+                }} />
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <ChefHat size={32} className="text-primary" />
+                        <h2>小灶私廚：傳承溫潤的舌尖記憶</h2>
+                    </div>
+                    <div className="about-content" style={{ display: 'flex', flexDirection: 'column', gap: '14px', color: 'var(--color-text-secondary)' }}>
+                        <p style={{ whiteSpace: 'pre-line' }}>{aboutText1}</p>
+                        <p style={{ whiteSpace: 'pre-line' }}>{aboutText2}</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
+                            <span className="tag">🥘 每日手工限量</span>
+                            <span className="tag">🌿 當日新鮮食材</span>
+                            <span className="tag">❤️ 絕無人工添加</span>
+                        </div>
                     </div>
                 </div>
             </section>
