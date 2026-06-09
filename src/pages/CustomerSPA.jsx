@@ -173,14 +173,8 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
             </div>
 
             {/* SECTION 1: 關於小灶 */}
-            <section id="section-about" className="card" style={{ marginTop: '8px', position: 'relative', overflow: 'hidden' }}>
-                {/* 1. 最底層：自適應背景圖 (電腦版 20% / 手機版 6% 輕微模糊) */}
-                <div className="about-bg-image" />
-
-                {/* 2. 中間層：自適應遮罩 (電腦版漸層 / 手機版全幅高對比白底) */}
-                <div className="about-bg-overlay" />
-                {/* 3. 最上層：文字內容 */}
-                <div style={{ position: 'relative', zIndex: 2 }}>
+            <section id="section-about" className="card" style={{ marginTop: '8px' }}>
+                <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <ChefHat size={32} className="text-primary" />
                         <h2>小灶私廚：傳承溫潤的舌尖記憶</h2>
