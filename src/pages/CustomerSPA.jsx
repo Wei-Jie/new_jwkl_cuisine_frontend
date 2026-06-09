@@ -197,7 +197,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: 'linear-gradient(to right, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0.35) 100%)',
+                    background: 'linear-gradient(to right, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0.15) 100%)',
                     zIndex: 1,
                     pointerEvents: 'none'
                 }} />
