@@ -174,7 +174,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
 
             {/* SECTION 1: 關於小灶 */}
             <section id="section-about" className="card" style={{ marginTop: '8px', position: 'relative', overflow: 'hidden' }}>
-                {/* 背景裝飾圖，提供優雅的環境氛圍與質感 */}
+                {/* 1. 最底層：背景圖，透明度調至 0.25，並加入輕微模糊防止高頻細節干擾文字 */}
                 <div style={{
                     position: 'absolute',
                     top: 0,
@@ -186,10 +186,24 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     backgroundPosition: 'center',
                     opacity: 0.20,
                     zIndex: 0,
+                    filter: 'blur(3px)',
                     pointerEvents: 'none'
                 }} />
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
+                {/* 2. 中間層：線性漸層遮罩，左側文字區偏白保護易讀性，右側漸淡突顯牛腱圖片 */}
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(to right, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0.35) 100%)',
+                    zIndex: 1,
+                    pointerEvents: 'none'
+                }} />
+
+                {/* 3. 最上層：文字內容 */}
+                <div style={{ position: 'relative', zIndex: 2 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <ChefHat size={32} className="text-primary" />
                         <h2>小灶私廚：傳承溫潤的舌尖記憶</h2>
