@@ -186,7 +186,7 @@ export default function CustomerSPA({ cart, onCartOpen, onAddToCart, minOrderAmo
                     backgroundPosition: 'center',
                     opacity: 0.99,
                     zIndex: 0,
-                    filter: 'blur(2px)',
+                    filter: 'blur(1px)',
                     pointerEvents: 'none'
                 }} />
 
