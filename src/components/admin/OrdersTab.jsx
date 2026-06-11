@@ -126,17 +126,17 @@ export default function OrdersTab({
             <div className="card">
                 <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0 }}>📋 訂單總覽 (移動端自動卡片化測試)</h3>
                 <div className="responsive-table-wrap">
-                    <table className="admin-table">
+                    <table className="admin-table orders-table">
                         <thead>
                             <tr>
-                                <th>訂單號</th>
-                                <th>顧客名稱</th>
-                                <th>聯絡電話</th>
-                                <th>金額</th>
-                                <th>出貨日期</th>
-                                <th>付款狀態</th>
-                                <th>訂單狀態</th>
-                                <th>操作</th>
+                                <th style={{ width: '90px' }}>訂單號</th>
+                                <th style={{ width: '95px' }}>顧客名稱</th>
+                                <th style={{ width: '115px' }}>聯絡電話</th>
+                                <th style={{ width: '75px' }}>金額</th>
+                                <th style={{ width: '105px' }}>出貨日期</th>
+                                <th style={{ width: '95px' }}>付款狀態</th>
+                                <th style={{ width: '135px' }}>訂單狀態</th>
+                                <th style={{ width: '90px' }}>操作</th>
                             </tr>
                         </thead>
                         <tbody>

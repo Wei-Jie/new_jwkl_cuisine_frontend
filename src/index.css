@@ -297,6 +297,10 @@ input.form-control, select.form-control {
   border-collapse: collapse;
   font-size: 14px;
 }
+.orders-table {
+  min-width: auto !important; /* 消除訂單總覽表格的 1200px 最小寬度限制，以自適應容器寬度防橫向卷軸 */
+  width: 100% !important;
+}
 
 .schedule-table {
   min-width: auto !important; /* 消除排單表格 the 1200px 最小寬度限制，以自適應容器寬度防裁切 */
