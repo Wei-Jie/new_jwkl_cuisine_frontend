@@ -199,19 +199,21 @@ export default function SchedulesTab({
                 </div>
             </div>
 
-            {schedules.length > 0 && (
+            {queriedProducts.length > 0 && (
                 <>
                     <div className="card">
                         <div className="card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px' }}>
                             <h3 className="section-title" style={{ margin: 0, whiteSpace: 'nowrap' }}>📊 【{queriedProducts.join(', ')}】排單明細</h3>
-                            <button 
-                                className="btn btn-primary btn-sm"
-                                onClick={saveBatchSchedules}
-                                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontWeight: '600', width: 'auto', whiteSpace: 'nowrap', minHeight: '36px' }}
-                                disabled={isSmiLoading}
-                            >
-                                💾 儲存狀態異動
-                            </button>
+                            {schedules.length > 0 && (
+                                <button 
+                                    className="btn btn-primary btn-sm"
+                                    onClick={saveBatchSchedules}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontWeight: '600', width: 'auto', whiteSpace: 'nowrap', minHeight: '36px' }}
+                                    disabled={isSmiLoading}
+                                >
+                                    💾 儲存狀態異動
+                                </button>
+                            )}
                         </div>
 
                         {/* 多品項統計與庫存卡片網格 */}
@@ -324,64 +326,70 @@ export default function SchedulesTab({
                             })}
                         </div>
 
-                        <div className="responsive-table-wrap">
-                            <table className="admin-table schedule-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '40px', textAlign: 'center' }}>
-                                            <input 
-                                                type="checkbox"
-                                                onChange={(e) => toggleSelectAll(e.target.checked)}
-                                                checked={schedules.length > 0 && checkedItemIds.length === schedules.length}
-                                                style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
-                                            />
-                                        </th>
-                                        <th style={{ width: '80px' }}>訂單號</th>
-                                        <th style={{ width: '100px' }}>訂單日期</th>
-                                        <th style={{ width: '80px' }}>客戶名稱</th>
-                                        <th>品項</th>
-                                        <th style={{ width: '60px' }}>訂購數量</th>
-                                        <th style={{ width: '80px' }}>商品單價</th>
-                                        <th style={{ width: '80px' }}>小計價格</th>
-                                        <th style={{ width: '145px' }}>製作狀態</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {schedules.map(item => (
-                                        <tr key={item.id}>
-                                            <td style={{ textAlign: 'center' }} data-label="勾選">
+                        {schedules.length > 0 ? (
+                            <div className="responsive-table-wrap">
+                                <table className="admin-table schedule-table">
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: '40px', textAlign: 'center' }}>
                                                 <input 
                                                     type="checkbox"
-                                                    checked={checkedItemIds.includes(item.id)}
-                                                    onChange={(e) => toggleSelectOne(item.id, e.target.checked)}
+                                                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                                                    checked={schedules.length > 0 && checkedItemIds.length === schedules.length}
                                                     style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
                                                 />
-                                            </td>
-                                            <td data-label="訂單號"><strong>{item.orderId}</strong></td>
-                                            <td data-label="訂單日期">{item.orderDate}</td>
-                                            <td data-label="客戶名稱">{item.customerName}</td>
-                                            <td data-label="品項">{item.itemName}</td>
-                                            <td data-label="訂購數量" style={{ fontWeight: '700' }}>{item.qty}</td>
-                                            <td data-label="商品單價">${item.unitPrice}</td>
-                                            <td data-label="小計價格" style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
-                                                ${item.subtotal}
-                                            </td>
-                                            <td data-label="製作狀態">
-                                                <select
-                                                    className="form-control form-control-sm"
-                                                    value={item.status}
-                                                    onChange={(e) => handleStatusSelectChange(item.id, e.target.value)}
-                                                    style={{ cursor: 'pointer', fontWeight: '500' }}
-                                                >
-                                                    <option value="待製作">⏳ 待排程</option>
-                                                    <option value="已完成">✅ 已完成</option>
-                                                </select>
-                                            </td>
+                                            </th>
+                                            <th style={{ width: '80px' }}>訂單號</th>
+                                            <th style={{ width: '100px' }}>訂單日期</th>
+                                            <th style={{ width: '80px' }}>客戶名稱</th>
+                                            <th>品項</th>
+                                            <th style={{ width: '60px' }}>訂購數量</th>
+                                            <th style={{ width: '80px' }}>商品單價</th>
+                                            <th style={{ width: '80px' }}>小計價格</th>
+                                            <th style={{ width: '145px' }}>製作狀態</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {schedules.map(item => (
+                                            <tr key={item.id}>
+                                                <td style={{ textAlign: 'center' }} data-label="勾選">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={checkedItemIds.includes(item.id)}
+                                                        onChange={(e) => toggleSelectOne(item.id, e.target.checked)}
+                                                        style={{ cursor: 'pointer', transform: 'scale(1.1)' }}
+                                                    />
+                                                </td>
+                                                <td data-label="訂單號"><strong>{item.orderId}</strong></td>
+                                                <td data-label="訂單日期">{item.orderDate}</td>
+                                                <td data-label="客戶名稱">{item.customerName}</td>
+                                                <td data-label="品項">{item.itemName}</td>
+                                                <td data-label="訂購數量" style={{ fontWeight: '700' }}>{item.qty}</td>
+                                                <td data-label="商品單價">${item.unitPrice}</td>
+                                                <td data-label="小計價格" style={{ fontWeight: '700', color: 'var(--color-primary)' }}>
+                                                    ${item.subtotal}
+                                                </td>
+                                                <td data-label="製作狀態">
+                                                    <select
+                                                        className="form-control form-control-sm"
+                                                        value={item.status}
+                                                        onChange={(e) => handleStatusSelectChange(item.id, e.target.value)}
+                                                        style={{ cursor: 'pointer', fontWeight: '500' }}
+                                                    >
+                                                        <option value="待製作">⏳ 待排程</option>
+                                                        <option value="已完成">✅ 已完成</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', marginTop: '16px' }}>
+                                ℹ️ 選擇的品項在目前篩選的時間區間內，無任何待排程或已完成的訂單。
+                            </div>
+                        )}
                     </div>
                 </>
             )}

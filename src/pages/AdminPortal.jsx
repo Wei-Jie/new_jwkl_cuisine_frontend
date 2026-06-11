@@ -374,22 +374,42 @@ export default function AdminPortal() {
     // ==========================================
     // 訂單管理 Tab 回調方法
     // ==========================================
-    const startEditOrder = (order) => {
+    const startEditOrder = async (order) => {
         setEditingOrder({ ...order });
-        const items = orderItems.filter(item => item.orderId === order.order_id || item.order_id === order.order_id);
-        const mappedItems = items.map(item => {
-            const copy = { ...item };
-            const menu = menuList.find(m => m.product_id === copy.productId || m.product_id === copy.product_id);
-            const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(copy.productId || copy.product_id)) : false;
-            if (isWeight && copy.qty > 5 && (!copy.productAmt || parseFloat(copy.productAmt) <= 10)) {
-                const oldQty = copy.qty;
-                copy.productAmt = oldQty;
-                copy.qty = 1;
-            }
-            return copy;
-        });
-        setEditingOrderItems(mappedItems);
+        
+        // 快速取得明細列表的處理函式
+        const getLocalItems = (sourceItems) => {
+            const items = sourceItems.filter(item => item.orderId === order.order_id || item.order_id === order.order_id);
+            return items.map(item => {
+                const copy = { ...item };
+                const menu = menuList.find(m => m.product_id === copy.productId || m.product_id === copy.product_id);
+                const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(copy.productId || copy.product_id)) : false;
+                if (isWeight && copy.qty > 5 && (!copy.productAmt || parseFloat(copy.productAmt) <= 10)) {
+                    const oldQty = copy.qty;
+                    copy.productAmt = oldQty;
+                    copy.qty = 1;
+                }
+                return copy;
+            });
+        };
+
+        // 1. 先用本地現有 orderItems 快取渲染，確保秒開 Modal 不卡頓
+        setEditingOrderItems(getLocalItems(orderItems));
         setShowEditOrderModal(true);
+
+        // 2. 隨即在背景非同步更新最新的 orderItems，防止行動端加載延遲或新單資料同步時差
+        try {
+            const config = { headers: {} };
+            const res = await customFetch('/api/v1/orders/items/all', config);
+            if (res.ok) {
+                const data = await res.json();
+                setOrderItems(data);
+                // 使用最新取得的資料重新渲染明細
+                setEditingOrderItems(getLocalItems(data));
+            }
+        } catch (err) {
+            console.error("背景即時同步訂單明細失敗:", err);
+        }
     };
 
     const getWeightRate = (priceStr) => {

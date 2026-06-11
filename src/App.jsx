@@ -13,6 +13,7 @@ export default function App() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('about');
     const [toasts, setToasts] = useState([]);
+    const [orderSuccessData, setOrderSuccessData] = useState(null); // 控制送單成功彈窗狀態
 
     const showToast = (msg, type = 'success') => {
         const newId = Date.now();
@@ -67,7 +68,10 @@ export default function App() {
             
             if (data.status === 'success') {
                 showToast(`訂單已送出成功！已為您發布接單`);
-                alert(`🎉 恭喜！您的專屬訂單已送出成功！\n訂單編號：${data.order_id}\n請妥善保存此編號，您可隨時於前台「訂單進度追蹤」中查詢出貨進度！`);
+                setOrderSuccessData({
+                    orderId: data.order_id,
+                    isMock: false
+                });
                 return true;
             } else {
                 throw new Error(data.message || '下單失敗');
@@ -76,7 +80,10 @@ export default function App() {
             return new Promise((resolve) => {
                 setTimeout(() => {
                     showToast('訂單已送出成功！(模擬安全回退)');
-                    alert(`🎉 恭喜！預約單送出成功！(本地安全回退啟用)\n專屬訂單編號：S000001\n請妥善保存以供日後追蹤使用。`);
+                    setOrderSuccessData({
+                        orderId: 'S000001',
+                        isMock: true
+                    });
                     resolve(true);
                 }, 1200);
             });
@@ -131,6 +138,146 @@ export default function App() {
                     </div>
                 ))}
             </div>
+
+            {/* 🎉 顧客預約訂單送出成功精美彈窗 (取代原生 alert 以隱藏 Vercel 網址並提升質感) */}
+            {orderSuccessData && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                    backdropFilter: 'blur(5px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 99999,
+                    padding: '16px'
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        padding: '30px 24px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        textAlign: 'center',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        border: '1px solid #f2eee6'
+                    }}>
+                        <div style={{
+                            fontSize: '52px',
+                            marginBottom: '16px'
+                        }}>🎉</div>
+                        
+                        <h3 style={{
+                            color: 'var(--color-primary, #b45309)',
+                            margin: '0 0 12px 0',
+                            fontSize: '20px',
+                            fontWeight: '800'
+                        }}>
+                            恭喜！預約訂單已送出成功！
+                        </h3>
+                        
+                        {orderSuccessData.isMock && (
+                            <div style={{ 
+                                fontSize: '11px', 
+                                color: '#ef4444', 
+                                backgroundColor: '#fee2e2', 
+                                borderRadius: '4px',
+                                padding: '2px 8px',
+                                display: 'inline-block',
+                                marginBottom: '12px',
+                                fontWeight: 'bold'
+                            }}>
+                                本地安全回退模式
+                            </div>
+                        )}
+                        
+                        <p style={{
+                            color: '#4b5563',
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            margin: '0 0 16px 0'
+                        }}>
+                            您的專屬訂單編號如下，請妥善保存以供進度追蹤：
+                        </p>
+                        
+                        {/* 訂單編號與一鍵複製區域 */}
+                        <div style={{
+                            backgroundColor: '#fffbeb',
+                            border: '2px dashed #fcd34d',
+                            borderRadius: '10px',
+                            padding: '16px',
+                            marginBottom: '20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            <span style={{
+                                fontSize: '26px',
+                                fontWeight: '800',
+                                letterSpacing: '1px',
+                                color: '#b45309'
+                            }}>
+                                {orderSuccessData.orderId}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(orderSuccessData.orderId);
+                                    showToast('已複製訂單編號！');
+                                }}
+                                style={{
+                                    padding: '4px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    color: '#b45309',
+                                    backgroundColor: '#fef3c7',
+                                    border: '1px solid #fde68a',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s',
+                                    outline: 'none'
+                                }}
+                            >
+                                📋 複製訂單編號
+                            </button>
+                        </div>
+                        
+                        <p style={{
+                            color: '#6b7280',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            margin: '0 0 24px 0',
+                            backgroundColor: '#f9fafb',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            textAlign: 'left'
+                        }}>
+                            💡 <strong>提示：</strong>您可隨時於網頁頂部點選「訂單追蹤」，輸入此編號與您的手機號碼，即可即時查詢本筆訂單的備料與出貨狀態！
+                        </p>
+                        
+                        <button
+                            type="button"
+                            onClick={() => setOrderSuccessData(null)}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                color: '#ffffff',
+                                backgroundColor: 'var(--color-primary, #b45309)',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 6px -1px rgba(180, 83, 9, 0.3)',
+                                outline: 'none'
+                            }}
+                        >
+                            確定並關閉
+                        </button>
+                    </div>
+                </div>
+            )}
         </HashRouter>
     );
 }
