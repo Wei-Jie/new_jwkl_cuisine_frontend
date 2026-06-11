@@ -57,20 +57,9 @@ export default function AdminPortal() {
     const [showEditOrderModal, setShowEditOrderModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
     const [editingOrderItems, setEditingOrderItems] = useState([]);
-    const [filterStartDate, setFilterStartDate] = useState(() => {
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = today.getMonth();
-        return `${y}-${String(m + 1).padStart(2, '0')}-01`;
-    });
-    const [filterEndDate, setFilterEndDate] = useState(() => {
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = today.getMonth();
-        const lastDay = new Date(y, m + 1, 0).getDate();
-        return `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-    });
-    const [filterStatus, setFilterStatus] = useState('全部');
+    const [filterStartDate, setFilterStartDate] = useState('');
+    const [filterEndDate, setFilterEndDate] = useState('');
+    const [filterStatus, setFilterStatus] = useState('待確認');
 
     // ==========================================
     // 4. 訂單商品細項狀態 (統計與排單使用)
@@ -175,7 +164,7 @@ export default function AdminPortal() {
                 normalized.sort((a, b) => {
                     const numA = parseInt(String(a.order_id).replace(/\D/g, ''), 10) || 0;
                     const numB = parseInt(String(b.order_id).replace(/\D/g, ''), 10) || 0;
-                    return numB - numA;
+                    return numA - numB;
                 });
                 setOrders(normalized);
             }
@@ -187,6 +176,14 @@ export default function AdminPortal() {
     };
 
     const fetchOrdersWithFilters = async (statusVal = filterStatus, startVal = filterStartDate, endVal = filterEndDate) => {
+        // 其餘狀態必須選擇日期進行過篩，若無日期直接不查詢並設為空，以防止載入大量數據
+        if (statusVal !== '待確認' && statusVal !== '已接單') {
+            if (!startVal || !endVal) {
+                setOrders([]);
+                return;
+            }
+        }
+
         setIsOrdersLoading(true);
         try {
             const config = { headers: {} };
@@ -213,12 +210,18 @@ export default function AdminPortal() {
                     payment_date: o.paymentDate || o.payment_date,
                     line_id: o.lineId || o.line_id
                 }));
+                // 升冪排序（先進先出）
                 normalized.sort((a, b) => {
                     const numA = parseInt(String(a.order_id).replace(/\D/g, ''), 10) || 0;
                     const numB = parseInt(String(b.order_id).replace(/\D/g, ''), 10) || 0;
-                    return numB - numA;
+                    return numA - numB;
                 });
                 setOrders(normalized);
+
+                // 待確認與已接單不選日期之超過 20 筆警示（使用店主指定之簡化版 Alert 語句）
+                if ((statusVal === '待確認' || statusVal === '已接單') && (!startVal || !endVal) && normalized.length > 20) {
+                    alert(`⚠️ 查詢結果共有 ${normalized.length} 筆訂單。目前尚未選擇日期區間，因訂單筆數較多，建議您選擇「下單日期區間」進行篩選！`);
+                }
             }
         } catch (err) {
             console.log("無法依據篩選條件獲取訂單，保留預設資料", err);
