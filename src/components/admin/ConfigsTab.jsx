@@ -96,7 +96,7 @@ const ConfigsTab = ({
     const [isUploading, setIsUploading] = useState(false);
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
                 {/* 公告與簡介設定 */}
                 <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0, margin: 0 }}>⚙️ 品牌簡介與首頁跑馬燈設定</h3>
@@ -175,7 +175,7 @@ const ConfigsTab = ({
                     {isConfigsLoading ? (
                         <div style={{ textAlign: 'center', padding: '20px' }}>載入問答中...</div>
                     ) : (
-                        <div className="responsive-table-wrap" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+                        <div className="responsive-table-wrap">
                             <table className="admin-table faq-table">
                                 <thead>
                                     <tr>

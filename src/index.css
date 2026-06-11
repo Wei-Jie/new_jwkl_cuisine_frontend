@@ -529,7 +529,7 @@ select, select.form-control {
   padding-top: 6px !important;
   padding-bottom: 6px !important;
   line-height: 1.5 !important;
-  height: 38px !important;
+  height: 48px;
   box-sizing: border-box !important;
 }
 
