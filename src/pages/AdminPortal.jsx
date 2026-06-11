@@ -640,7 +640,7 @@ export default function AdminPortal() {
     };
 
     const handleRejectOrder = async (orderId) => {
-        if (!confirm(`確定要退回訂單 ${orderId} 嗎？`)) return;
+        if (!(await window.sweetConfirm(`確定要退回訂單 ${orderId} 嗎？`))) return;
         try {
             const config = {
                 method: 'PUT',
@@ -813,7 +813,7 @@ export default function AdminPortal() {
             }
         }
 
-        const ok = confirm(`確定要批次儲存這 ${checkedItemIds.length} 筆項目的製作狀態異動嗎？`);
+        const ok = await window.sweetConfirm(`確定要批次儲存這 ${checkedItemIds.length} 筆項目的製作狀態異動嗎？`);
         if (!ok) return;
 
         setIsSmiLoading(true);
@@ -1021,7 +1021,7 @@ export default function AdminPortal() {
     };
 
     const handleDeleteExpense = async (id) => {
-        if (!confirm('確定要刪除這筆採購支出明細嗎？')) return;
+        if (!(await window.sweetConfirm('確定要刪除這筆採購支出明細嗎？'))) return;
         try {
             const config = {
                 method: 'DELETE',
@@ -1438,7 +1438,7 @@ export default function AdminPortal() {
     };
 
     const handleDeleteFaq = async (id) => {
-        if (!confirm('確定要刪除這筆常見問題嗎？')) return;
+        if (!(await window.sweetConfirm('確定要刪除這筆常見問題嗎？'))) return;
         try {
             const config = {
                 method: 'DELETE',

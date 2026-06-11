@@ -1,5 +1,5 @@
 // 強制重新部署以刷清 Vercel Edge CDN 的快取
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import ShoppingCart from './components/ShoppingCart';
@@ -14,6 +14,26 @@ export default function App() {
     const [activeSection, setActiveSection] = useState('about');
     const [toasts, setToasts] = useState([]);
     const [orderSuccessData, setOrderSuccessData] = useState(null); // 控制送單成功彈窗狀態
+    const [dialogConfig, setDialogConfig] = useState(null); // 控制全域自訂提示與確認彈窗狀態
+
+    useEffect(() => {
+        window.sweetAlert = (message, title = '系統提示') => {
+            return new Promise((resolve) => {
+                setDialogConfig({ type: 'alert', title, message, resolve });
+            });
+        };
+
+        window.sweetConfirm = (message, title = '確認操作') => {
+            return new Promise((resolve) => {
+                setDialogConfig({ type: 'confirm', title, message, resolve });
+            });
+        };
+
+        // 全域覆寫原生 alert 轉為 sweetAlert
+        window.alert = (message) => {
+            window.sweetAlert(message);
+        };
+    }, []);
 
     const showToast = (msg, type = 'success') => {
         const newId = Date.now();
@@ -275,6 +295,139 @@ export default function App() {
                         >
                             確定並關閉
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 💬 全域自訂提示與確認彈窗 (覆寫原生 alert() & confirm()，美化 UI 且不帶 Vercel 網址) */}
+            {dialogConfig && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 999999,
+                    padding: '16px'
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        padding: '24px',
+                        maxWidth: '380px',
+                        width: '90%',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        border: '1px solid #f2eee6',
+                        textAlign: 'center'
+                    }}>
+                        {/* 依據文字與類型自動切換對應精美 Icon */}
+                        <div style={{
+                            fontSize: '44px',
+                            marginBottom: '12px'
+                        }}>
+                            {dialogConfig.type === 'confirm' ? '❓' : 
+                             (dialogConfig.message?.includes('成功') || dialogConfig.message?.includes('🎉') || dialogConfig.message?.includes('恭喜')) ? '✅' : 
+                             (dialogConfig.message?.includes('失敗') || dialogConfig.message?.includes('錯誤') || dialogConfig.message?.includes('❌')) ? '❌' : 'ℹ️'}
+                        </div>
+                        
+                        <h4 style={{
+                            margin: '0 0 10px 0',
+                            fontSize: '18px',
+                            fontWeight: '800',
+                            color: 'var(--color-text)'
+                        }}>
+                            {dialogConfig.title}
+                        </h4>
+                        
+                        <p style={{
+                            margin: '0 0 20px 0',
+                            fontSize: '14px',
+                            color: 'var(--color-text-secondary)',
+                            lineHeight: '1.5',
+                            whiteSpace: 'pre-wrap',
+                            textAlign: 'center'
+                        }}>
+                            {dialogConfig.message}
+                        </p>
+                        
+                        <div style={{
+                            display: 'flex',
+                            gap: '12px',
+                            justifyContent: 'center'
+                        }}>
+                            {dialogConfig.type === 'confirm' ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            dialogConfig.resolve(true);
+                                            setDialogConfig(null);
+                                        }}
+                                        style={{
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            fontWeight: '700',
+                                            color: '#ffffff',
+                                            backgroundColor: 'var(--color-primary, #d97706)',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            flex: 1,
+                                            outline: 'none',
+                                            boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                                        }}
+                                    >
+                                        確定
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            dialogConfig.resolve(false);
+                                            setDialogConfig(null);
+                                        }}
+                                        style={{
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            fontWeight: '700',
+                                            color: 'var(--color-text-secondary)',
+                                            backgroundColor: 'transparent',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            flex: 1,
+                                            outline: 'none'
+                                        }}
+                                    >
+                                        取消
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        dialogConfig.resolve(true);
+                                        setDialogConfig(null);
+                                    }}
+                                    style={{
+                                        padding: '10px 24px',
+                                        fontSize: '14px',
+                                        fontWeight: '700',
+                                        color: '#ffffff',
+                                        backgroundColor: 'var(--color-primary, #d97706)',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        width: '100%',
+                                        outline: 'none',
+                                        boxShadow: '0 2px 4px rgba(217, 119, 6, 0.2)'
+                                    }}
+                                >
+                                    確定
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
