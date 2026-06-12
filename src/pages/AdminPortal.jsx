@@ -1526,6 +1526,7 @@ export default function AdminPortal() {
                 {activeTab === 'orders' && (
                     <OrdersTab
                         orders={orders}
+                        orderItems={orderItems}
                         isOrdersLoading={isOrdersLoading}
                         filterStartDate={filterStartDate}
                         setFilterStartDate={setFilterStartDate}

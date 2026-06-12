@@ -3,6 +3,7 @@ import EditOrderModal from './EditOrderModal';
 
 export default function OrdersTab({
     orders,
+    orderItems = [],
     isOrdersLoading,
     filterStartDate,
     setFilterStartDate,
@@ -120,6 +121,112 @@ export default function OrdersTab({
                             .reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0)
                             .toLocaleString()}
                     </div>
+                </div>
+            </div>
+            
+            {/* 📦 當前篩選區間：品項排單與庫存摘要 */}
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0, marginTop: 0, marginBottom: '12px', color: 'var(--color-primary)' }}>
+                    📦 當前篩選區間：品項排程與庫存摘要
+                </h3>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginBottom: '16px' }}>
+                    本表自動統計下方篩選結果中所有<strong>「已接單」</strong>狀態訂單之品項需求。結合可用自由庫存，提供精確的製作建議。
+                </p>
+                <div className="responsive-table-wrap">
+                    <table className="admin-table orders-table" style={{ fontSize: '13.5px' }}>
+                        <thead>
+                            <tr style={{ background: '#fdfaf6', borderBottom: '2px solid #ece6dc' }}>
+                                <th>品項名稱</th>
+                                <th style={{ textAlign: 'center', width: '90px' }}>實體庫存</th>
+                                <th style={{ textAlign: 'center', width: '110px' }}>已分配保留</th>
+                                <th style={{ textAlign: 'center', width: '120px' }}>可用自由庫存</th>
+                                <th style={{ textAlign: 'center', width: '100px' }}>總訂購需求</th>
+                                <th style={{ textAlign: 'center', width: '100px' }}>待製作數量</th>
+                                <th style={{ textAlign: 'center', width: '150px' }}>製作建議</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {menuList
+                                .filter(m => m.productId !== 'PROD_DISCOUNT')
+                                .map(menu => {
+                                    const allStock = menu.stock || 0;
+                                    
+                                    // 1. 已分配保留：已接單、明細已完成、但尚未出貨結單的品項數量
+                                    const resStock = orderItems.filter(item => {
+                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        if (!isMatch) return false;
+                                        if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
+                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        if (!parent) return false;
+                                        return parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
+                                    }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
+                                    
+                                    const freeStock = allStock - resStock;
+                                    const isWeight = String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(menu.productId);
+                                    
+                                    // 2. 當前總需求：當前篩選出的已接單訂單中該品項的總量
+                                    const totalDemand = orderItems.filter(item => {
+                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        if (!isMatch) return false;
+                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        return parent && parent.status === '已接單';
+                                    }).reduce((sum, item) => {
+                                        const q = parseFloat(item.qty) || 0;
+                                        return sum + (isWeight && q > 10 ? 1 : q);
+                                    }, 0);
+
+                                    // 3. 待製作數量：當前篩選出的已接單訂單中，該品項明細狀態為「待製作」的數量
+                                    const itemPendingQty = orderItems.filter(item => {
+                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        if (!isMatch) return false;
+                                        if ((item.itemStatus || item.item_status) !== '待製作') return false;
+                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        return parent && parent.status === '已接單';
+                                    }).reduce((sum, item) => {
+                                        const q = parseFloat(item.qty) || 0;
+                                        return sum + (isWeight && q > 10 ? 1 : q);
+                                    }, 0);
+
+                                    // 4. 製作建議計算
+                                    let adviceText = '-';
+                                    let adviceStyle = { color: '#6b7280', fontWeight: 'normal' };
+                                    
+                                    if (freeStock > 0 && freeStock >= itemPendingQty && itemPendingQty > 0) {
+                                        adviceText = '無須製作';
+                                        adviceStyle = { color: '#16a34a', fontWeight: 'bold', backgroundColor: '#f0fdf4', padding: '4px 10px', borderRadius: '20px', border: '1px solid #bbf7d0', display: 'inline-block', fontSize: '12px' };
+                                    } else if (freeStock === 0 && itemPendingQty === 0) {
+                                        adviceText = '-';
+                                    } else if (itemPendingQty > 0) {
+                                        const needed = itemPendingQty - Math.max(0, freeStock);
+                                        if (needed <= 0) {
+                                            adviceText = '無須製作';
+                                            adviceStyle = { color: '#16a34a', fontWeight: 'bold', backgroundColor: '#f0fdf4', padding: '4px 10px', borderRadius: '20px', border: '1px solid #bbf7d0', display: 'inline-block', fontSize: '12px' };
+                                        } else {
+                                            adviceText = `需再製作 ${needed} 包`;
+                                            adviceStyle = { color: '#dc2626', fontWeight: 'bold', backgroundColor: '#fee2e2', padding: '4px 10px', borderRadius: '20px', border: '1px solid #fecaca', display: 'inline-block', fontSize: '12px' };
+                                        }
+                                    }
+
+                                    return (
+                                        <tr key={menu.productId}>
+                                            <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{menu.name}</td>
+                                            <td style={{ textAlign: 'center', color: '#4b5563' }}>{allStock}</td>
+                                            <td style={{ textAlign: 'center', color: '#4b5563' }}>{resStock}</td>
+                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: freeStock < 0 ? '#dc2626' : '#1f2937' }}>
+                                                {freeStock}
+                                            </td>
+                                            <td style={{ textAlign: 'center', color: '#4b5563' }}>{totalDemand}</td>
+                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: itemPendingQty > 0 ? 'var(--color-primary)' : '#4b5563' }}>
+                                                {itemPendingQty}
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={adviceStyle}>{adviceText}</span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
