@@ -165,8 +165,7 @@ const InventoryTab = ({
 
                                     const freeStock = allStock - resStock;
                                     const isManaged = m.isStockManaged || false;
-                                    const isWeight = String(m.price).includes('*') || String(m.price).includes('重量') || ['P3001', 'P3002'].includes(m.product_id);
-                                    const unit = isWeight ? 'g' : '個';
+                                    const unit = '個';
 
                                     return (
                                         <tr key={m.product_id}>

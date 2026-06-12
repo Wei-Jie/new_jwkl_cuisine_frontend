@@ -240,7 +240,7 @@ export default function SchedulesTab({
                                 
                                 const freeStock = allStock - resStock;
                                 const isWeight = String(currentProductMenu.price).includes('*') || String(currentProductMenu.price).includes('重量') || ['P3001', 'P3002'].includes(currentProductMenu.productId);
-                                const unit = isWeight ? 'g' : '個';
+                                const unit = '個';
                                 
                                 const itemPendingQty = orderItems.filter(item => {
                                     if ((item.itemStatus || item.item_status) !== '待製作') return false;
@@ -264,8 +264,14 @@ export default function SchedulesTab({
                                         if (t < start || t > end) return false;
                                     }
                                     return true;
-                                }).reduce((sum, item) => sum + (parseFloat(item.qty) || 0), 0);
-                                const itemTotalQty = schedules.filter(s => s.itemName === pName).reduce((sum, s) => sum + (parseFloat(s.qty) || 0), 0);
+                                }).reduce((sum, item) => {
+                                    const q = parseFloat(item.qty) || 0;
+                                    return sum + (isWeight && q > 10 ? 1 : q);
+                                }, 0);
+                                const itemTotalQty = schedules.filter(s => s.itemName === pName).reduce((sum, s) => {
+                                    const q = parseFloat(s.qty) || 0;
+                                    return sum + (isWeight && q > 10 ? 1 : q);
+                                }, 0);
                                 
                                 return (
                                     <div key={pName} className="card" style={{ 
