@@ -123,6 +123,81 @@ export default function OrdersTab({
                     </div>
                 </div>
             </div>
+
+            <div className="card">
+                <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0 }}>📋 訂單總覽 (移動端自動卡片化測試)</h3>
+                <div className="responsive-table-wrap">
+                    <table className="admin-table orders-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '90px' }}>訂單號</th>
+                                <th style={{ width: '95px' }}>顧客名稱</th>
+                                <th style={{ width: '115px' }}>聯絡電話</th>
+                                <th style={{ width: '75px' }}>金額</th>
+                                <th style={{ width: '105px' }}>出貨日期</th>
+                                <th style={{ width: '95px' }}>付款狀態</th>
+                                <th style={{ width: '135px' }}>訂單狀態</th>
+                                <th style={{ width: '90px' }}>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders.map(o => (
+                                <tr key={o.order_id}>
+                                    <td data-label="訂單號"><strong>{o.order_id}</strong></td>
+                                    <td data-label="顧客名稱">{o.customer_name}</td>
+                                    <td data-label="聯絡電話">{o.phone}</td>
+                                    <td data-label="金額">${o.amount}</td>
+                                    <td data-label="出貨日期">{o.delivery_date}</td>
+                                    <td data-label="付款狀態">
+                                        <span className={`badge ${o.payment_status === '已付款' ? 'badge-done' : 'badge-pending'}`}>
+                                            {o.payment_status}
+                                        </span>
+                                    </td>
+                                    <td data-label="訂單狀態">
+                                        <span className={`badge ${
+                                            o.status === '已接單' ? 'badge-shipped' : 
+                                            o.status === '已出貨' ? 'badge-shipped' : 
+                                            o.status === '已結單' ? 'badge-done' : 
+                                            o.status === '已退回' ? 'badge-pending' : 'badge-pending'
+                                        }`} style={o.status === '已退回' ? { backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' } : {}}>
+                                            {o.status === 'Spacer' ? o.status : o.status === '已接單' ? '已接單 (待排程)' : o.status}
+                                        </span>
+                                    </td>
+                                    <td data-label="操作">
+                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+                                            {o.status === '待確認' && (
+                                                <>
+                                                    <button 
+                                                        className="btn btn-sm btn-primary" 
+                                                        style={{ padding: '4px 10px', minHeight: '30px', backgroundColor: 'var(--color-success)', borderColor: 'var(--color-success)', width: 'auto' }}
+                                                        onClick={() => handleAcceptOrder(o.order_id)}
+                                                    >
+                                                        接單
+                                                    </button>
+                                                    <button 
+                                                        className="btn btn-sm btn-danger" 
+                                                        style={{ padding: '4px 10px', minHeight: '30px', width: 'auto' }}
+                                                        onClick={() => handleRejectOrder(o.order_id)}
+                                                    >
+                                                        退回
+                                                    </button>
+                                                </>
+                                            )}
+                                            <button 
+                                                className="btn btn-sm btn-outline" 
+                                                style={{ padding: '4px 10px', minHeight: '30px', width: 'auto' }}
+                                                onClick={() => startEditOrder(o)}
+                                            >
+                                                編輯
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             
             {/* 📦 當前篩選區間：品項排單與庫存摘要 */}
             <div className="card" style={{ marginBottom: '20px' }}>
@@ -133,7 +208,7 @@ export default function OrdersTab({
                     本表自動統計下方篩選結果中所有<strong>「已接單」</strong>狀態訂單之品項需求。結合可用自由庫存，提供精確的製作建議。
                 </p>
                 <div className="responsive-table-wrap">
-                    <table className="admin-table orders-table" style={{ fontSize: '13.5px' }}>
+                    <table className="summary-table" style={{ fontSize: '13.5px' }}>
                         <thead>
                             <tr style={{ background: '#fdfaf6', borderBottom: '2px solid #ece6dc' }}>
                                 <th>品項名稱</th>
@@ -151,7 +226,6 @@ export default function OrdersTab({
                                 .map(menu => {
                                     const allStock = menu.stock || 0;
                                     
-                                    // 1. 已分配保留：已接單、明細已完成、但尚未出貨結單的品項數量
                                     const resStock = orderItems.filter(item => {
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
@@ -164,7 +238,6 @@ export default function OrdersTab({
                                     const freeStock = allStock - resStock;
                                     const isWeight = String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(menu.productId);
                                     
-                                    // 2. 當前總需求：當前篩選出的已接單訂單中該品項的總量
                                     const totalDemand = orderItems.filter(item => {
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
@@ -175,7 +248,8 @@ export default function OrdersTab({
                                         return sum + (isWeight && q > 10 ? 1 : q);
                                     }, 0);
 
-                                    // 3. 待製作數量：當前篩選出的已接單訂單中，該品項明細狀態為「待製作」的數量
+                                    if (totalDemand === 0) return null;
+
                                     const itemPendingQty = orderItems.filter(item => {
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
@@ -187,7 +261,6 @@ export default function OrdersTab({
                                         return sum + (isWeight && q > 10 ? 1 : q);
                                     }, 0);
 
-                                    // 4. 製作建議計算
                                     let adviceText = '-';
                                     let adviceStyle = { color: '#6b7280', fontWeight: 'normal' };
                                     
