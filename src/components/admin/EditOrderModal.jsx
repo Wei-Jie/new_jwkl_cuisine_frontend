@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import ShareReceiptModal from './ShareReceiptModal';
 
 export default function EditOrderModal({
     show,
@@ -17,6 +18,8 @@ export default function EditOrderModal({
     onAddDiscount,
     onSave
 }) {
+    const [showShareModal, setShowShareModal] = useState(false);
+
     if (!show || !editingOrder) return null;
 
     return createPortal(
@@ -303,12 +306,29 @@ export default function EditOrderModal({
                     </div>
 
                     {/* Modal 底部按鈕 */}
-                    <div className="modal-footer">
+                    <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <button 
+                            type="button" 
+                            className="btn btn-outline" 
+                            onClick={() => setShowShareModal(true)} 
+                            style={{ marginRight: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px', borderColor: 'var(--color-primary)', color: 'var(--color-primary)' }}
+                        >
+                            📤 分享與下載對帳單
+                        </button>
                         <button type="submit" className="btn btn-primary">💾 儲存訂單與排程變更</button>
                         <button type="button" className="btn btn-outline" onClick={onClose}>取消</button>
                     </div>
                 </form>
             </div>
+            
+            {/* 分享與對帳單 Modal */}
+            <ShareReceiptModal 
+                isOpen={showShareModal} 
+                onClose={() => setShowShareModal(false)} 
+                order={editingOrder} 
+                orderItems={editingOrderItems} 
+                menuList={menuList} 
+            />
         </div>,
         document.body
     );

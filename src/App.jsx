@@ -6,6 +6,7 @@ import ShoppingCart from './components/ShoppingCart';
 import CustomerSPA from './pages/CustomerSPA';
 import CustomerTrack from './pages/CustomerTrack';
 import AdminPortal from './pages/AdminPortal';
+import ReceiptView from './pages/ReceiptView';
 import { customFetch } from './utils/helpers';
 
 export default function App() {
@@ -137,6 +138,8 @@ export default function App() {
                 <Route path="/track" element={<CustomerTrack />} />
 
                 <Route path="/admin-portal-xyz" element={<AdminPortal />} />
+
+                <Route path="/receipt/:orderId" element={<ReceiptView />} />
             </Routes>
 
             <ShoppingCart 
