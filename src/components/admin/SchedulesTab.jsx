@@ -235,7 +235,7 @@ export default function SchedulesTab({
                                     if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
                                     const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                     if (!parent) return false;
-                                    return parent.status !== '已出貨' && parent.status !== '已完成' && parent.status !== '已取消' && parent.status !== '已退回';
+                                    return parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
                                 }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
                                 
                                 const freeStock = allStock - resStock;

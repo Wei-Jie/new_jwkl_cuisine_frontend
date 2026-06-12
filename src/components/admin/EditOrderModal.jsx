@@ -155,7 +155,7 @@ export default function EditOrderModal({
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     setEditingOrder({ ...editingOrder, status: val });
-                                    if (val === '已出貨' || val === '已完成') {
+                                    if (val === '已出貨' || val === '已結單') {
                                         setEditingOrderItems(prev => prev.map(item => {
                                             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                             if (isDiscount) return item;
@@ -171,7 +171,7 @@ export default function EditOrderModal({
                                 <option value="待確認">待確認</option>
                                 <option value="已接單">已接單 (待排程)</option>
                                 <option value="已出貨">已出貨</option>
-                                <option value="已完成">已完成 (已結單)</option>
+                                <option value="已結單">已結單</option>
                                 <option value="已退回">已退回</option>
                                 <option value="已取消">已取消</option>
                             </select>
