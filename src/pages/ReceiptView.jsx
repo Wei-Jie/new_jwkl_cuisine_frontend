@@ -181,7 +181,7 @@ export default function ReceiptView() {
 
                     {/* 總額 */}
                     <div style={{ textAlign: 'right', padding: '10px 0', fontSize: '16px', fontWeight: 'bold', color: '#1f2937', borderTop: '2px solid #ece6dc' }}>
-                        總計金額：<span style={{ color: '#b45309', fontSize: '22px' }}>${parseInt(totalAmount)}</span> 元
+                        總計金額：<span style={{ color: '#b45309', fontSize: '22px' }}>${parseInt(order.amount)}</span> 元
                     </div>
 
                     {/* 備註 */}
