@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { customFetch } from '../utils/helpers';
 
 export default function ReceiptView() {
     const { orderId } = useParams();
@@ -13,14 +14,14 @@ export default function ReceiptView() {
         const loadData = async () => {
             try {
                 // 1. 獲取選單項目 (用於顯示商品中文名稱)
-                const menuRes = await fetch('/api/v1/menus');
+                const menuRes = await customFetch('/api/v1/menus');
                 if (menuRes.ok) {
                     const menus = await menuRes.json();
                     setMenuList(menus);
                 }
 
                 // 2. 獲取去識別化後的公開安全對帳單資料
-                const res = await fetch(`/api/v1/orders/receipt/${orderId}`);
+                const res = await customFetch(`/api/v1/orders/receipt/${orderId}`);
                 if (!res.ok) {
                     throw new Error('查無此預約對帳單，請確認網址是否正確！');
                 }
