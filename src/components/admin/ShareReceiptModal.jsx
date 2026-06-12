@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, menuList }) {
     const canvasRef = useRef(null);
@@ -233,8 +234,8 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
         link.click();
     };
 
-    return (
-        <div className="modal-backdrop" style={{ zIndex: 1100 }}>
+    return createPortal(
+        <div className="modal-overlay" style={{ zIndex: 1100 }}>
             <div className="modal-container" style={{ maxWidth: '650px', width: '90%' }}>
                 <div className="modal-header" style={{ borderBottom: '1px solid #ece6dc', padding: '16px 20px' }}>
                     <h3 style={{ margin: 0, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -350,6 +351,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
