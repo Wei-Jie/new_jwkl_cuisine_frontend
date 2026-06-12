@@ -319,6 +319,27 @@ export default function SchedulesTab({
                                                     <span style={{ color: '#6b7280' }}>📊 總需求:</span>
                                                     <strong style={{ color: '#2563eb' }}>{itemTotalQty}{unit}</strong>
                                                 </div>
+                                                {/* 製作建議提示 */}
+                                                {((freeStock > 0 && freeStock >= itemPendingQty && itemPendingQty > 0) || (freeStock < itemPendingQty && itemPendingQty >= 1)) && (
+                                                    <div style={{ 
+                                                        marginTop: '4px',
+                                                        paddingTop: '4px',
+                                                        borderTop: '1px dashed #f2eee6',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        fontSize: '11px'
+                                                    }}>
+                                                        <span style={{ color: '#8c857b' }}>💡 建議:</span>
+                                                        {freeStock > 0 && freeStock >= itemPendingQty && itemPendingQty > 0 ? (
+                                                            <strong style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '1px 6px', borderRadius: '4px', scale: '0.95', transformOrigin: 'right' }}>無須製作</strong>
+                                                        ) : (
+                                                            <strong style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '1px 6px', borderRadius: '4px', scale: '0.95', transformOrigin: 'right' }}>
+                                                                需再製作: {itemPendingQty - freeStock}{unit}
+                                                            </strong>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
