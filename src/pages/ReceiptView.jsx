@@ -17,7 +17,11 @@ export default function ReceiptView() {
                 const menuRes = await customFetch('/api/v1/menus');
                 if (menuRes.ok) {
                     const menus = await menuRes.json();
-                    setMenuList(menus);
+                    const normalized = menus.map(m => ({
+                        ...m,
+                        product_id: m.productId || m.product_id
+                    }));
+                    setMenuList(normalized);
                 }
 
                 // 2. 獲取去識別化後的公開安全對帳單資料
@@ -155,7 +159,11 @@ export default function ReceiptView() {
                         </thead>
                         <tbody>
                             {details.map((item, idx) => {
-                                const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
+                                const menu = menuList.find(m => {
+                                    const mId = m.productId || m.product_id;
+                                    const iId = item.productId || item.product_id;
+                                    return mId && iId && mId === iId;
+                                });
                                 const pName = item.productId === 'PROD_DISCOUNT' ? '🎁 折扣折抵' : (menu ? menu.name : item.productId);
                                 const isDiscount = item.productId === 'PROD_DISCOUNT';
                                 const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
