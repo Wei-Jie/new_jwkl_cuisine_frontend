@@ -85,6 +85,7 @@ export default function OrdersTab({
                             <option value="全部">全部</option>
                             <option value="待確認">待確認</option>
                             <option value="已接單">已接單</option>
+                            <option value="已完成">已完成</option>
                             <option value="已出貨">已出貨</option>
                             <option value="已結單">已結單</option>
                             <option value="已退回">已退回</option>
@@ -159,7 +160,7 @@ export default function OrdersTab({
                                             o.status === '已出貨' ? 'badge-shipped' : 
                                             o.status === '已結單' ? 'badge-done' : 
                                             o.status === '已退回' ? 'badge-pending' : 'badge-pending'
-                                        }`} style={o.status === '已退回' ? { backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' } : {}}>
+                                        }`} style={o.status === '已完成' ? { backgroundColor: '#e0f2fe', color: '#0369a1', borderColor: '#7dd3fc' } : o.status === '已退回' ? { backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' } : {}}>
                                             {o.status === 'Spacer' ? o.status : o.status === '已接單' ? '已接單 (待排程)' : o.status}
                                         </span>
                                     </td>

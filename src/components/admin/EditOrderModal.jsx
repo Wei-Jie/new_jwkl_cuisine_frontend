@@ -173,6 +173,7 @@ export default function EditOrderModal({
                             >
                                 <option value="待確認">待確認</option>
                                 <option value="已接單">已接單 (待排程)</option>
+                                <option value="已完成">已完成</option>
                                 <option value="已出貨">已出貨</option>
                                 <option value="已結單">已結單</option>
                                 <option value="已退回">已退回</option>
