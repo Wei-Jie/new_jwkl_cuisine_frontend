@@ -33,10 +33,10 @@ export default function OrdersTab({
     const [localStatus, setLocalStatus] = useState(filterStatus);
 
     const handleSearchClick = () => {
-        // 其餘狀態（非待確認與已接單）必須選日期
-        if (localStatus !== '待確認' && localStatus !== '已接單') {
+        // 其餘狀態（非待確認、已接單與已完成）必須選日期
+        if (localStatus !== '待確認' && localStatus !== '已接單' && localStatus !== '已完成') {
             if (!localStartDate || !localEndDate) {
-                alert('❌ 其餘訂單狀態（全部、已出貨、已完成、已退回、已取消）必須選擇「下單開始日期」與「下單結束日期」進行篩選！');
+                alert('❌ 其餘訂單狀態（全部、已出貨、已退回、已取消）必須選擇「下單開始日期」與「下單結束日期」進行篩選！');
                 return;
             }
         }

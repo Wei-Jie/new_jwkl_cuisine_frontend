@@ -177,7 +177,7 @@ export default function AdminPortal() {
 
     const fetchOrdersWithFilters = async (statusVal = filterStatus, startVal = filterStartDate, endVal = filterEndDate) => {
         // 其餘狀態必須選擇日期進行過篩，若無日期直接不查詢並設為空，以防止載入大量數據
-        if (statusVal !== '待確認' && statusVal !== '已接單') {
+        if (statusVal !== '待確認' && statusVal !== '已接單' && statusVal !== '已完成') {
             if (!startVal || !endVal) {
                 setOrders([]);
                 return;
@@ -218,8 +218,8 @@ export default function AdminPortal() {
                 });
                 setOrders(normalized);
 
-                // 待確認與已接單不選日期之超過 20 筆警示（使用店主指定之簡化版 Alert 語句）
-                if ((statusVal === '待確認' || statusVal === '已接單') && (!startVal || !endVal) && normalized.length > 20) {
+                // 待確認、已接單與已完成不選日期之超過 20 筆警示（使用店主指定之簡化版 Alert 語句）
+                if ((statusVal === '待確認' || statusVal === '已接單' || statusVal === '已完成') && (!startVal || !endVal) && normalized.length > 20) {
                     alert(`⚠️ 查詢結果共有 ${normalized.length} 筆訂單。目前尚未選擇日期區間，因訂單筆數較多，建議您選擇「下單日期區間」進行篩選！`);
                 }
             }
