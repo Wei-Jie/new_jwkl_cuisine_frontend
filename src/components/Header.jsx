@@ -57,8 +57,8 @@ export default function Header({
     const navItems = [
         { id: 'about', label: '🥘 關於小灶' },
         { id: 'menu', label: '📖 精選菜單' },
-        showCommunity && { id: 'stories', label: '📸 灶下動態' },
         { id: 'faq', label: '❓ 常見問題' },
+        showCommunity && { id: 'stories', label: '📸 灶下動態' },
         { id: 'track', label: '🔍 訂單追蹤' }
     ].filter(Boolean);
 

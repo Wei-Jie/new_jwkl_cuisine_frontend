@@ -134,7 +134,14 @@ const CommunityTab = () => {
             const res = await customFetch(`/api/v1/comments/post/${post.id}/all`);
             if (res.ok) {
                 const data = await res.json();
-                setComments(data);
+                const normalized = data.map(c => ({
+                    ...c,
+                    author: c.nickName || c.nick_name || c.author || '匿名顧客',
+                    content: c.commentText || c.comment_text || c.content || '',
+                    createdAt: c.createdAt || c.created_at,
+                    created_at: c.createdAt || c.created_at
+                }));
+                setComments(normalized);
             }
         } catch (err) {
             console.error("載入所有留言失敗", err);

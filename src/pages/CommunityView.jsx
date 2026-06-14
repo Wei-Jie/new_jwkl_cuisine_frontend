@@ -110,6 +110,8 @@ export default function CommunityView() {
                     const data = await res.json();
                     const normalized = data.map(c => ({
                         ...c,
+                        author: c.nickName || c.nick_name || c.author || '匿名顧客',
+                        content: c.commentText || c.comment_text || c.content || '',
                         createdAt: c.createdAt || c.created_at,
                         created_at: c.createdAt || c.created_at
                     }));
@@ -147,8 +149,8 @@ export default function CommunityView() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    author: newComment.author.trim(),
-                    content: newComment.content.trim()
+                    nickName: newComment.author.trim(),
+                    commentText: newComment.content.trim()
                 })
             });
 
@@ -156,6 +158,8 @@ export default function CommunityView() {
                 const data = await res.json();
                 const normalized = {
                     ...data,
+                    author: data.nickName || data.nick_name || data.author || '匿名顧客',
+                    content: data.commentText || data.comment_text || data.content || '',
                     createdAt: data.createdAt || data.created_at,
                     created_at: data.createdAt || data.created_at
                 };
