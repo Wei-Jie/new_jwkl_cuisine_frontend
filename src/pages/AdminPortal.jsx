@@ -259,7 +259,9 @@ export default function AdminPortal() {
                 product_id: m.productId || m.product_id,
                 min_qty: m.minQty || m.min_qty || 1,
                 image_filename: m.imageFilename || m.image_filename,
-                image_url: m.imageUrl || m.image_url
+                image_url: m.imageUrl || m.image_url,
+                isStockManaged: m.isStockManaged !== undefined ? m.isStockManaged : (m.is_stock_managed || false),
+                is_stock_managed: m.isStockManaged !== undefined ? m.isStockManaged : (m.is_stock_managed || false)
             }));
             setMenuList(normalized);
         } catch (err) {
