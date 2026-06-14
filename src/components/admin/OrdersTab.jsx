@@ -132,19 +132,21 @@ export default function OrdersTab({
                     <table className="admin-table orders-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '90px' }}>訂單號</th>
-                                <th style={{ width: '95px' }}>顧客名稱</th>
-                                <th style={{ width: '115px' }}>聯絡電話</th>
-                                <th style={{ width: '75px' }}>金額</th>
-                                <th style={{ width: '105px' }}>出貨日期</th>
-                                <th style={{ width: '95px' }}>付款狀態</th>
-                                <th style={{ width: '135px' }}>訂單狀態</th>
-                                <th style={{ width: '90px' }}>操作</th>
+                                <th style={{ width: '90px' }}>下單日期</th>
+                                <th style={{ width: '80px' }}>訂單號</th>
+                                <th style={{ width: '85px' }}>顧客名稱</th>
+                                <th style={{ width: '105px' }}>聯絡電話</th>
+                                <th style={{ width: '65px' }}>金額</th>
+                                <th style={{ width: '90px' }}>出貨日期</th>
+                                <th style={{ width: '85px' }}>付款狀態</th>
+                                <th style={{ width: '120px' }}>訂單狀態</th>
+                                <th style={{ width: '80px' }}>操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.map(o => (
                                 <tr key={o.order_id}>
+                                    <td data-label="下單日期">{o.order_date}</td>
                                     <td data-label="訂單號"><strong>{o.order_id}</strong></td>
                                     <td data-label="顧客名稱">{o.customer_name}</td>
                                     <td data-label="聯絡電話">{o.phone}</td>
@@ -161,7 +163,7 @@ export default function OrdersTab({
                                             o.status === '已出貨' ? 'badge-shipped' : 
                                             o.status === '已結單' ? 'badge-done' : 
                                             o.status === '已退回' ? 'badge-pending' : 'badge-pending'
-                                        }`} style={o.status === '已完成' ? { backgroundColor: '#e0f2fe', color: '#0369a1', borderColor: '#7dd3fc' } : o.status === '已退回' ? { backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' } : {}}>
+                                        }`} style={o.status === '已完成' ? { backgroundColor: '#e0f2fe', color: '#0369a1', borderColor: '#7dd3fc' } : o.status === 'Spacer' ? {} : o.status === '已退回' ? { backgroundColor: 'var(--color-danger-light)', color: 'var(--color-danger)', borderColor: 'var(--color-danger)' } : {}}>
                                             {o.status === 'Spacer' ? o.status : o.status === '已接單' ? '已接單 (待排程)' : o.status}
                                         </span>
                                     </td>

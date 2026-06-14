@@ -602,7 +602,8 @@ export default function AdminPortal() {
                 body: JSON.stringify(itemsPayload)
             };
             
-            const itemsRes = await customFetch(`/api/v1/orders/${editingOrder.order_id}/items`, itemsConfig);
+            const nextStatus = editingOrder.status || '';
+            const itemsRes = await customFetch(`/api/v1/orders/${editingOrder.order_id}/items?nextStatus=${encodeURIComponent(nextStatus)}`, itemsConfig);
             if (!itemsRes.ok) {
                 const errText = await itemsRes.text();
                 throw new Error(errText || '更新訂單品項明細失敗');
