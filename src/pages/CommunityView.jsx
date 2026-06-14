@@ -20,6 +20,10 @@ export default function CommunityView() {
     const [selectedPost, setSelectedPost] = useState(null);
     const [comments, setComments] = useState([]);
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+    const [currentImgIndex, setCurrentImgIndex] = useState(0); // 隨筆多圖輪播 Index
+    
+    // 計算選中文章的圖片清單
+    const imageUrls = selectedPost?.coverImageUrl ? selectedPost.coverImageUrl.split(',') : [];
     
     // 留言表單狀態
     const [newComment, setNewComment] = useState({ author: '', content: '' });
@@ -101,6 +105,7 @@ export default function CommunityView() {
             setComments([]);
             return;
         }
+        setCurrentImgIndex(0); // 每次切換文章時，重設圖片輪播 Index 到第一張
 
         const fetchComments = async () => {
             setIsCommentsLoading(true);
@@ -222,6 +227,55 @@ export default function CommunityView() {
         }
     };
 
+    // 7. 將內文中的 Markdown 格式圖片 ![alt](url) 解析並渲染成 img 標籤元件
+    const renderContentWithImages = (text) => {
+        if (!text) return '';
+        const regex = /!\[(.*?)\]\((.*?)\)/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+        
+        while ((match = regex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(text.substring(lastIndex, match.index));
+            }
+            const alt = match[1];
+            const url = match[2];
+            parts.push(
+                <img 
+                    key={match.index} 
+                    src={url} 
+                    alt={alt} 
+                    className="content-inline-img"
+                    style={{ 
+                        maxWidth: '100%', 
+                        borderRadius: '8px', 
+                        margin: '12px auto', 
+                        display: 'block', 
+                        boxShadow: 'var(--shadow-sm)',
+                        border: '1px solid var(--color-border)'
+                    }} 
+                />
+            );
+            lastIndex = regex.lastIndex;
+        }
+        
+        if (lastIndex < text.length) {
+            parts.push(text.substring(lastIndex));
+        }
+        
+        if (parts.length === 0) {
+            return text;
+        }
+        
+        return parts.map((part, index) => {
+            if (typeof part === 'string') {
+                return <span key={index} style={{ whiteSpace: 'pre-wrap' }}>{part}</span>;
+            }
+            return part;
+        });
+    };
+
     return (
         <div className="community-layout main-layout">
             <div className="container">
@@ -271,30 +325,41 @@ export default function CommunityView() {
                         {/* 依據分類展示不同的排版 */}
                         {activeCategory === 'STORY' && (
                             <div className="stories-grid">
-                                {posts.map(post => (
-                                    <div 
-                                        key={post.id} 
-                                        className="story-grid-item"
-                                        onClick={() => setSelectedPost(post)}
-                                    >
-                                        {post.coverImageUrl ? (
-                                            <img 
-                                                src={post.coverImageUrl} 
-                                                alt="日常隨筆" 
-                                                className="story-grid-image"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="story-text-card">
-                                                <div className="story-text-preview">{post.content}</div>
-                                                <div className="story-text-meta">
-                                                    <span>✍️ 闆娘隨筆</span>
-                                                    <span>{formatDateTime(post.createdAt).split(' ')[0]}</span>
+                                {posts.map(post => {
+                                    const images = post.coverImageUrl ? post.coverImageUrl.split(',') : [];
+                                    const hasMultipleImages = images.length > 1;
+                                    return (
+                                        <div 
+                                            key={post.id} 
+                                            className="story-grid-item"
+                                            onClick={() => setSelectedPost(post)}
+                                        >
+                                            {images.length > 0 ? (
+                                                <>
+                                                    <img 
+                                                        src={images[0]} 
+                                                        alt="日常隨筆" 
+                                                        className="story-grid-image"
+                                                        loading="lazy"
+                                                    />
+                                                    {hasMultipleImages && (
+                                                        <div className="story-multiple-indicator" title="多張圖片">
+                                                            📑
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className="story-text-card">
+                                                    <div className="story-text-preview">{post.content}</div>
+                                                    <div className="story-text-meta">
+                                                        <span>✍️ 闆娘隨筆</span>
+                                                        <span>{formatDateTime(post.createdAt).split(' ')[0]}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
 
@@ -370,91 +435,132 @@ export default function CommunityView() {
                 {/* 雙欄高質感燈箱 (Lightbox) */}
                 {selectedPost && (
                     <div className="lightbox-overlay" onClick={() => setSelectedPost(null)}>
-                        {/* 燈箱本體 */}
-                        <div className="lightbox-container card" onClick={(e) => e.stopPropagation()}>
-                            {/* 關閉按鈕 */}
-                            <button className="lightbox-close-btn" onClick={() => setSelectedPost(null)}>
-                                <X size={18} />
-                            </button>
+                            {/* 燈箱外的左右切換箭頭 (切換動態文章) */}
+                            {hasPrev && (
+                                <button className="lightbox-nav-btn prev" onClick={handlePrevPost} title="上一篇">
+                                    <ChevronLeft size={24} />
+                                </button>
+                            )}
+                            {hasNext && (
+                                <button className="lightbox-nav-btn next" onClick={handleNextPost} title="下一篇">
+                                    <ChevronRight size={24} />
+                                </button>
+                            )}
 
-                            {/* 燈箱左側：大圖 (僅在有圖片時展示，或顯示漸層背景與大標) */}
-                            <div className="lightbox-left">
-                                {selectedPost.coverImageUrl ? (
-                                    <img src={selectedPost.coverImageUrl} alt="動態圖片" className="lightbox-main-img" />
-                                ) : (
-                                    <div className="lightbox-text-placeholder">
-                                        <div>
-                                            <div style={{ fontSize: '48px', marginBottom: '16px' }}>
-                                                {selectedPost.category === 'ANNOUNCEMENT' ? '📢' : 
-                                                 selectedPost.category === 'EVENT' ? '🎉' : 
-                                                 selectedPost.category === 'SERIAL' ? '📖' : '📸'}
+                            {/* 燈箱本體 */}
+                            <div className="lightbox-container card" onClick={(e) => e.stopPropagation()}>
+                                {/* 關閉按鈕 */}
+                                <button className="lightbox-close-btn" onClick={() => setSelectedPost(null)}>
+                                    <X size={18} />
+                                </button>
+
+                                {/* 燈箱左側：大圖 (支援多圖輪播) */}
+                                <div className="lightbox-left">
+                                    {imageUrls.length > 0 ? (
+                                        <div className="lightbox-carousel-wrap" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <img src={imageUrls[currentImgIndex]} alt="動態圖片" className="lightbox-main-img" />
+                                            
+                                            {/* 內部圖片輪播切換按鈕 */}
+                                            {imageUrls.length > 1 && (
+                                                <>
+                                                    <button 
+                                                        className="carousel-nav-btn prev"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentImgIndex(prev => (prev > 0 ? prev - 1 : imageUrls.length - 1));
+                                                        }}
+                                                        title="上一張"
+                                                    >
+                                                        ‹
+                                                    </button>
+                                                    <button 
+                                                        className="carousel-nav-btn next"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentImgIndex(prev => (prev < imageUrls.length - 1 ? prev + 1 : 0));
+                                                        }}
+                                                        title="下一張"
+                                                    >
+                                                        ›
+                                                    </button>
+                                                    
+                                                    {/* IG-style 圓點指示器 */}
+                                                    <div className="carousel-dots">
+                                                        {imageUrls.map((_, idx) => (
+                                                            <span 
+                                                                key={idx} 
+                                                                className={`carousel-dot ${currentImgIndex === idx ? 'active' : ''}`}
+                                                                onClick={(e) => { e.stopPropagation(); setCurrentImgIndex(idx); }}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="lightbox-text-placeholder">
+                                            <div>
+                                                <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                                                    {selectedPost.category === 'ANNOUNCEMENT' ? '📢' : 
+                                                     selectedPost.category === 'EVENT' ? '🎉' : 
+                                                     selectedPost.category === 'SERIAL' ? '📖' : '📸'}
+                                                </div>
+                                                <h2>{selectedPost.title || '日常隨筆'}</h2>
                                             </div>
-                                            <h2>{selectedPost.title || '日常隨筆'}</h2>
                                         </div>
-                                    </div>
-                                )}
-
-                                {/* 燈箱內的左右切換箭頭 (當有上一篇或下一篇時) */}
-                                {hasPrev && (
-                                    <button className="lightbox-nav-btn prev" onClick={handlePrevPost}>
-                                        <ChevronLeft size={20} />
-                                    </button>
-                                )}
-                                {hasNext && (
-                                    <button className="lightbox-nav-btn next" onClick={handleNextPost}>
-                                        <ChevronRight size={20} />
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* 燈箱右側：內文詳情與留言 */}
-                            <div className="lightbox-right">
-                                {/* 右側 Header (作者與時間) */}
-                                <div className="lightbox-header">
-                                    <div className="lightbox-author-info">
-                                        <div className="lightbox-avatar">
-                                            {selectedPost.category === 'SERIAL' ? '✍️' : '👩'}
-                                        </div>
-                                        <div className="lightbox-author-meta">
-                                            <h4>
-                                                {selectedPost.category === 'STORY' ? '闆娘隨筆' : 
-                                                 selectedPost.category === 'SERIAL' ? '故事連載' : '小灶私廚'}
-                                            </h4>
-                                            <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
-                                        </div>
-                                    </div>
-                                    {selectedPost.title && (
-                                        <h3 className="lightbox-title">
-                                            {selectedPost.category === 'SERIAL' && `第 ${selectedPost.chapterNum} 章：`}
-                                            {selectedPost.title}
-                                        </h3>
                                     )}
                                 </div>
 
-                                {/* 右側 Body (內文滾動與留言) */}
-                                <div className="lightbox-body-scroll">
-                                    {/* 文章完整內文 */}
-                                    <p className="lightbox-post-content">{selectedPost.content}</p>
-
-                                    {/* 故事連載專屬的章節導航 */}
-                                    {selectedPost.category === 'SERIAL' && (
-                                        <div className="serial-navigation">
-                                            <button 
-                                                className="serial-nav-btn"
-                                                onClick={handlePrevPost}
-                                                disabled={!hasPrev}
-                                            >
-                                                👈 上一章
-                                            </button>
-                                            <button 
-                                                className="serial-nav-btn"
-                                                onClick={handleNextPost}
-                                                disabled={!hasNext}
-                                            >
-                                                下一章 👉
-                                            </button>
+                                {/* 燈箱右側：內文詳情與留言 */}
+                                <div className="lightbox-right">
+                                    {/* 右側 Header (作者與時間) */}
+                                    <div className="lightbox-header">
+                                        <div className="lightbox-author-info">
+                                            <div className="lightbox-avatar">
+                                                {selectedPost.category === 'SERIAL' ? '✍️' : '👩'}
+                                            </div>
+                                            <div className="lightbox-author-meta">
+                                                <h4>
+                                                    {selectedPost.category === 'STORY' ? '闆娘隨筆' : 
+                                                     selectedPost.category === 'SERIAL' ? '故事連載' : '小灶私廚'}
+                                                </h4>
+                                                <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
+                                            </div>
                                         </div>
-                                    )}
+                                        {selectedPost.title && (
+                                            <h3 className="lightbox-title">
+                                                {selectedPost.category === 'SERIAL' && `第 ${selectedPost.chapterNum} 章：`}
+                                                {selectedPost.title}
+                                            </h3>
+                                        )}
+                                    </div>
+
+                                    {/* 右側 Body (內文滾動與留言) */}
+                                    <div className="lightbox-body-scroll">
+                                        {/* 文章完整內文 (支援內文 Markdown 插圖) */}
+                                        <div className="lightbox-post-content">
+                                            {renderContentWithImages(selectedPost.content)}
+                                        </div>
+
+                                        {/* 故事連載專屬的章節導航 */}
+                                        {selectedPost.category === 'SERIAL' && (
+                                            <div className="serial-navigation">
+                                                <button 
+                                                    className="serial-nav-btn"
+                                                    onClick={handlePrevPost}
+                                                    disabled={!hasPrev}
+                                                >
+                                                    👈 上一章
+                                                </button>
+                                                <button 
+                                                    className="serial-nav-btn"
+                                                    onClick={handleNextPost}
+                                                    disabled={!hasNext}
+                                                >
+                                                    下一章 👉
+                                                </button>
+                                            </div>
+                                        )}
 
                                     {/* 留言系統區塊 */}
                                     <div className="comments-section">

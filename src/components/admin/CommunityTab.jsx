@@ -87,6 +87,12 @@ const CommunityTab = () => {
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
     
     const [isUploading, setIsUploading] = useState(false);
+    
+    // 方案 A/B 新增之狀態與 Ref
+    const [imageUrlList, setImageUrlList] = useState([]);
+    const [tempUrl, setTempUrl] = useState('');
+    const [isUploadingInline, setIsUploadingInline] = useState(false);
+    const contentRef = React.useRef(null);
 
     // 1. 載入所有文章 (後台專用)
     const fetchAllPosts = async () => {
@@ -187,6 +193,9 @@ const CommunityTab = () => {
                 chapterNum: post.chapterNum || 0,
                 status: post.status || 'PUBLISHED'
             });
+            const urls = (post.coverImageUrl || '').split(',').map(u => u.trim()).filter(Boolean);
+            setImageUrlList(urls);
+            setTempUrl('');
         } else {
             setEditingPostId(null);
             setPostForm({
@@ -198,11 +207,39 @@ const CommunityTab = () => {
                 chapterNum: 0,
                 status: 'PUBLISHED'
             });
+            setImageUrlList([]);
+            setTempUrl('');
         }
         setShowPostModal(true);
     };
 
-    // 5. 儲存/發布文章
+    // 5. 插入 Markdown 格式圖片輔助函數
+    const insertMarkdownImage = (imageUrl) => {
+        const textarea = contentRef.current;
+        if (!textarea) return;
+
+        const startPos = textarea.selectionStart;
+        const endPos = textarea.selectionEnd;
+        const text = postForm.content;
+        const markdownImg = `\n![插圖](${imageUrl})\n`;
+        
+        // 拼接字串
+        const newContent = text.substring(0, startPos) + markdownImg + text.substring(endPos);
+        
+        setPostForm(prev => ({
+            ...prev,
+            content: newContent
+        }));
+
+        // 重新 Focus 並設定游標位置到插入字串之後
+        setTimeout(() => {
+            textarea.focus();
+            const cursorPosition = startPos + markdownImg.length;
+            textarea.setSelectionRange(cursorPosition, cursorPosition);
+        }, 50);
+    };
+
+    // 6. 儲存/發布文章
     const handleSavePost = async (e) => {
         e.preventDefault();
         
@@ -220,13 +257,15 @@ const CommunityTab = () => {
         const url = isEdit ? `/api/v1/posts/${editingPostId}` : '/api/v1/posts';
         const method = isEdit ? 'PUT' : 'POST';
 
+        const joinedUrls = imageUrlList.filter(Boolean).join(',');
+
         // 建立後端所需 Payload (包含駝峰與底線命名雙對齊以相容後端)
         const payload = {
             title: postForm.category === 'STORY' ? '' : postForm.title.trim(),
             content: postForm.content.trim(),
             category: postForm.category.toUpperCase(),
-            coverImageUrl: postForm.coverImageUrl.trim(),
-            cover_image_url: postForm.coverImageUrl.trim(),
+            coverImageUrl: joinedUrls,
+            cover_image_url: joinedUrls,
             tags: postForm.tags.trim(),
             chapterNum: postForm.category === 'SERIAL' ? parseInt(postForm.chapterNum) || 0 : 0,
             chapter_num: postForm.category === 'SERIAL' ? parseInt(postForm.chapterNum) || 0 : 0,
@@ -579,8 +618,88 @@ const CommunityTab = () => {
                             )}
 
                             <div className="form-group">
-                                <label className="form-label">詳細內文 (Content)</label>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                    <label className="form-label" style={{ margin: 0 }}>詳細內文 (Content)</label>
+                                    {postForm.category === 'SERIAL' && (
+                                        <label 
+                                            className="btn btn-sm btn-outline" 
+                                            style={{ 
+                                                display: 'inline-flex', 
+                                                alignItems: 'center', 
+                                                gap: '4px', 
+                                                padding: '4px 10px', 
+                                                fontSize: '12px', 
+                                                height: 'auto',
+                                                cursor: 'pointer',
+                                                pointerEvents: isUploadingInline ? 'none' : 'auto',
+                                                opacity: isUploadingInline ? 0.6 : 1,
+                                                margin: 0
+                                            }}
+                                        >
+                                            {isUploadingInline ? '⏳ 上傳中...' : '🖼️ 插入圖片'}
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const rawFile = e.target.files[0];
+                                                    if (!rawFile) return;
+
+                                                    if (rawFile.size > 20 * 1024 * 1024) {
+                                                        alert('上傳失敗：圖片檔案不可超過 20MB！');
+                                                        return;
+                                                    }
+
+                                                    setIsUploadingInline(true);
+                                                    let uploadSuccess = false;
+                                                    let uploadErrorMsg = '';
+                                                    let uploadedUrl = '';
+
+                                                    try {
+                                                        const file = await compressAndConvertToWebP(rawFile);
+                                                        if (file.size > 2 * 1024 * 1024) {
+                                                            throw new Error('壓縮後的圖片大小仍超過 2MB！');
+                                                        }
+
+                                                        const formData = new FormData();
+                                                        formData.append('file', file);
+                                                        
+                                                        const res = await customFetch('/api/v1/upload', {
+                                                            method: 'POST',
+                                                            headers: {},
+                                                            body: formData
+                                                        });
+                                                        if (res.ok) {
+                                                            const data = await res.json();
+                                                            if (data.status === 'success') {
+                                                                uploadedUrl = data.url;
+                                                                uploadSuccess = true;
+                                                            } else {
+                                                                uploadErrorMsg = data.message || '未知錯誤';
+                                                            }
+                                                        } else {
+                                                            uploadErrorMsg = await res.text();
+                                                        }
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                        uploadErrorMsg = err.message || '網路連線失敗，無法上傳圖片！';
+                                                    } finally {
+                                                        setIsUploadingInline(false);
+                                                        if (uploadSuccess) {
+                                                            insertMarkdownImage(uploadedUrl);
+                                                            setTimeout(() => alert('插圖上傳並插入成功！'), 100);
+                                                        } else if (uploadErrorMsg) {
+                                                            setTimeout(() => alert('上傳失敗：' + uploadErrorMsg), 100);
+                                                        }
+                                                    }
+                                                }}
+                                                style={{ display: 'none' }}
+                                                disabled={isUploadingInline}
+                                            />
+                                        </label>
+                                    )}
+                                </div>
                                 <textarea 
+                                    ref={contentRef}
                                     className="form-control"
                                     placeholder="填寫動態內容... 支援 emoji 表情符號 🎉"
                                     value={postForm.content}
@@ -591,16 +710,35 @@ const CommunityTab = () => {
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">封面/發文圖片 (選填)</label>
+                                <label className="form-label">
+                                    封面/隨筆圖片 {postForm.category === 'STORY' ? '(日常隨筆支援多圖輪播)' : '(限單張封面)'}
+                                </label>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <input 
                                         type="text"
                                         className="form-control"
-                                        placeholder="直接貼上圖片連結，或者點擊右側上傳本機圖片"
-                                        value={postForm.coverImageUrl}
-                                        onChange={(e) => setPostForm({ ...postForm, coverImageUrl: e.target.value })}
+                                        placeholder="貼上圖片連結，並點選右側新增或直接上傳圖片"
+                                        value={tempUrl}
+                                        onChange={(e) => setTempUrl(e.target.value)}
                                         style={{ flexGrow: 1 }}
                                     />
+                                    <button 
+                                        type="button"
+                                        className="btn btn-outline"
+                                        onClick={() => {
+                                            if (tempUrl.trim()) {
+                                                if (postForm.category !== 'STORY' && imageUrlList.length >= 1) {
+                                                    alert('非日常隨筆頻道僅支援單張封面圖片！');
+                                                    return;
+                                                }
+                                                setImageUrlList(prev => [...prev, tempUrl.trim()]);
+                                                setTempUrl('');
+                                            }
+                                        }}
+                                        style={{ height: '48px', whiteSpace: 'nowrap' }}
+                                    >
+                                        ➕ 新增網址
+                                    </button>
                                     <label 
                                         className="btn btn-outline" 
                                         style={{ 
@@ -625,6 +763,11 @@ const CommunityTab = () => {
                                                 const rawFile = e.target.files[0];
                                                 if (!rawFile) return;
                                                 
+                                                if (postForm.category !== 'STORY' && imageUrlList.length >= 1) {
+                                                    alert('非日常隨筆頻道僅支援單張封面圖片！');
+                                                    return;
+                                                }
+
                                                 if (rawFile.size > 20 * 1024 * 1024) {
                                                     alert('上傳失敗：圖片檔案不可超過 20MB！');
                                                     return;
@@ -666,7 +809,7 @@ const CommunityTab = () => {
                                                 } finally {
                                                     setIsUploading(false);
                                                     if (uploadSuccess) {
-                                                        setPostForm(prev => ({ ...prev, coverImageUrl: uploadedUrl }));
+                                                        setImageUrlList(prev => [...prev, uploadedUrl]);
                                                         setTimeout(() => alert('圖片上傳成功！'), 100);
                                                     } else if (uploadErrorMsg) {
                                                         setTimeout(() => alert('上傳失敗：' + uploadErrorMsg), 100);
