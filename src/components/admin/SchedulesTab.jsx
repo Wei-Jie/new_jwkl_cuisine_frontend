@@ -202,13 +202,13 @@ export default function SchedulesTab({
             {queriedProducts.length > 0 && (
                 <>
                     <div className="card">
-                        <div className="card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap', gap: '12px', marginBottom: '16px' }}>
-                            <h3 className="section-title" style={{ margin: 0, whiteSpace: 'nowrap' }}>📊 【{queriedProducts.join(', ')}】排單明細</h3>
+                        <div className="card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                            <h3 className="section-title" style={{ margin: 0, minWidth: 0, flex: '1 1 200px', wordBreak: 'break-all', lineHeight: '1.5' }}>📊 【{queriedProducts.join(', ')}】排單明細</h3>
                             {schedules.length > 0 && (
                                 <button 
                                     className="btn btn-primary btn-sm"
                                     onClick={saveBatchSchedules}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontWeight: '600', width: 'auto', whiteSpace: 'nowrap', minHeight: '36px' }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontWeight: '600', width: 'auto', whiteSpace: 'nowrap', minHeight: '36px', flexShrink: 0 }}
                                     disabled={isSmiLoading}
                                 >
                                     💾 儲存狀態異動

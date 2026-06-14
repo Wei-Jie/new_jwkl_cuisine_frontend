@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import SitePasswordGate from '../components/SitePasswordGate';
 import { customFetch, parseNoteCost, makeNoteStr } from '../utils/helpers';
+import { checkAndUpgradeOrderStatus, formatUpgradeMessage } from '../utils/orderStatusHelper';
 
 // 引入後台功能子 Tab 元件
 import OrdersTab from '../components/admin/OrdersTab';
@@ -594,7 +595,15 @@ export default function AdminPortal() {
             };
             const res = await customFetch(`/api/v1/orders/${editingOrder.order_id}`, config);
             if (res.ok) {
-                alert('訂單資訊與品項排程更新成功！');
+                // 儲存成功後，自動檢查主訂單是否可升級（所有明細已完成 → 升為已完成）
+                const upgraded = await checkAndUpgradeOrderStatus({
+                    orderIds: [editingOrder.order_id],
+                    getLatestItems: (_id) => editingOrderItems,
+                    getOrder: (_id) => editingOrder,
+                    apiFetch: customFetch
+                });
+                const upgradeMsg = formatUpgradeMessage(upgraded);
+                alert('訂單資訊與品項排程更新成功！' + upgradeMsg);
                 setShowEditOrderModal(false);
                 setEditingOrder(null);
                 fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
@@ -844,7 +853,35 @@ export default function AdminPortal() {
                 });
             }));
 
-            alert('製作狀態異動儲存成功！');
+            // 批次儲存成功後，自動檢查有異動的訂單是否可升級主狀態
+            // 1. 收集本次勾選的所有不重複 orderId
+            const affectedOrderIds = [...new Set(
+                checkedItemIds.map(id => {
+                    const item = schedules.find(s => s.id === id);
+                    return item ? (item.orderId || item.order_id) : null;
+                }).filter(Boolean)
+            )];
+
+            // 2. 模擬最新明細：以舊的 orderItems 為基礎，將勾選的 id 覆蓋為本次新狀態
+            const upgraded = await checkAndUpgradeOrderStatus({
+                orderIds: affectedOrderIds,
+                getLatestItems: (orderId) => {
+                    const baseItems = orderItems.filter(oi =>
+                        (oi.orderId === orderId || oi.order_id === orderId)
+                    );
+                    return baseItems.map(oi => {
+                        if (!checkedItemIds.includes(oi.id)) return oi;
+                        const schedule = schedules.find(s => s.id === oi.id);
+                        if (!schedule) return oi;
+                        // 以本次排單管理選擇的狀態覆蓋
+                        return { ...oi, itemStatus: schedule.status, item_status: schedule.status };
+                    });
+                },
+                getOrder: (orderId) => orders.find(o => o.order_id === orderId),
+                apiFetch: customFetch
+            });
+            const upgradeMsg = formatUpgradeMessage(upgraded);
+            alert('製作狀態異動儲存成功！' + upgradeMsg);
             await fetchSchedules(queriedProducts);
             fetchOrderItems();
         } catch (err) {
