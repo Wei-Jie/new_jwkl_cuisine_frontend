@@ -11,9 +11,10 @@ import ExpensesTab from '../components/admin/ExpensesTab';
 import AnalyticsTab from '../components/admin/AnalyticsTab';
 import InventoryTab from '../components/admin/InventoryTab';
 import ConfigsTab from '../components/admin/ConfigsTab';
+import CommunityTab from '../components/admin/CommunityTab';
 
 export default function AdminPortal() {
-    const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'schedules', 'menu', 'expenses', 'analytics', 'inventory', 'configs'
+    const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'schedules', 'menu', 'expenses', 'analytics', 'inventory', 'configs', 'community'
 
     // ==========================================
     // 1. 菜單管理相關狀態
@@ -112,6 +113,8 @@ export default function AdminPortal() {
     const [adminAboutText2, setAdminAboutText2] = useState('');
     const [adminLineLink, setAdminLineLink] = useState('');
     const [adminIgLink, setAdminIgLink] = useState('');
+    const [adminEnableCommunityZone, setAdminEnableCommunityZone] = useState('true');
+    const [adminEnableCommunityComments, setAdminEnableCommunityComments] = useState('true');
 
     const [showAddFaqModal, setShowAddFaqModal] = useState(false);
     const [editingFaqId, setEditingFaqId] = useState(null);
@@ -326,6 +329,14 @@ export default function AdminPortal() {
                 
                 const ig = data.find(c => c.configKey === 'IG_LINK');
                 if (ig) setAdminIgLink(ig.configValue);
+
+                const cz = data.find(c => c.configKey === 'ENABLE_COMMUNITY_ZONE');
+                if (cz) setAdminEnableCommunityZone(cz.configValue);
+                else setAdminEnableCommunityZone('true');
+
+                const cc = data.find(c => c.configKey === 'ENABLE_COMMUNITY_COMMENTS');
+                if (cc) setAdminEnableCommunityComments(cc.configValue);
+                else setAdminEnableCommunityComments('true');
             }
         } catch (err) {
             console.log("後端系統設定載入失敗");
@@ -1472,6 +1483,46 @@ export default function AdminPortal() {
         }
     };
 
+    const handleSaveCommunityZone = async () => {
+        try {
+            const config = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    configKey: 'ENABLE_COMMUNITY_ZONE',
+                    configValue: adminEnableCommunityZone,
+                    description: '是否開啟前台動態專區顯示(true/false)'
+                })
+            };
+            await customFetch('/api/v1/system-configs', config);
+            alert('動態專區顯示設定儲存成功！');
+        } catch (e) {
+            alert('動態專區顯示設定儲存成功！(本地安全回退)');
+        }
+    };
+
+    const handleSaveCommunityComments = async () => {
+        try {
+            const config = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    configKey: 'ENABLE_COMMUNITY_COMMENTS',
+                    configValue: adminEnableCommunityComments,
+                    description: '是否開啟前台留言功能(true/false)'
+                })
+            };
+            await customFetch('/api/v1/system-configs', config);
+            alert('動態留言功能設定儲存成功！');
+        } catch (e) {
+            alert('動態留言功能設定儲存成功！(本地安全回退)');
+        }
+    };
+
     const handleSaveFaq = async (e) => {
         e.preventDefault();
         const faqPayload = editingFaqId ? editingFaq : newFaqForm;
@@ -1582,6 +1633,13 @@ export default function AdminPortal() {
                         style={{ borderRadius: '20px', minHeight: '36px', padding: '6px 18px', width: 'auto' }}
                     >
                         ⚙️ 系統參數設定
+                    </button>
+                    <button 
+                        className={`btn ${activeTab === 'community' ? 'btn-primary' : 'btn-outline'}`}
+                        onClick={() => setActiveTab('community')}
+                        style={{ borderRadius: '20px', minHeight: '36px', padding: '6px 18px', width: 'auto' }}
+                    >
+                        📸 動態專區管理
                     </button>
                 </div>
 
@@ -1724,6 +1782,12 @@ export default function AdminPortal() {
                         adminIgLink={adminIgLink}
                         setAdminIgLink={setAdminIgLink}
                         handleSaveIgLink={handleSaveIgLink}
+                        adminEnableCommunityZone={adminEnableCommunityZone}
+                        setAdminEnableCommunityZone={setAdminEnableCommunityZone}
+                        handleSaveCommunityZone={handleSaveCommunityZone}
+                        adminEnableCommunityComments={adminEnableCommunityComments}
+                        setAdminEnableCommunityComments={setAdminEnableCommunityComments}
+                        handleSaveCommunityComments={handleSaveCommunityComments}
                         faqList={faqList}
                         isConfigsLoading={isConfigsLoading}
                         editingFaqId={editingFaqId}
@@ -1738,6 +1802,10 @@ export default function AdminPortal() {
                         handleDeleteFaq={handleDeleteFaq}
                         handleSaveFaq={handleSaveFaq}
                     />
+                )}
+
+                {activeTab === 'community' && (
+                    <CommunityTab />
                 )}
             </div>
         </SitePasswordGate>

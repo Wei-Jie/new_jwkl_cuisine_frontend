@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart as CartIcon, UserCheck } from 'lucide-react';
+import { customFetch } from '../utils/helpers';
 import './Header.css';
 
 export default function Header({
@@ -16,6 +17,7 @@ export default function Header({
     const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(
         () => !!sessionStorage.getItem('admin_api_key')
     );
+    const [showCommunity, setShowCommunity] = useState(true);
 
     // 監聽 storage 事件，讓登入/登出後導航列即時更新
     useEffect(() => {
@@ -31,17 +33,45 @@ export default function Header({
         };
     }, []);
 
+    // 定時檢查動態專區開關，以便後台關閉時前台能即時隱藏
+    useEffect(() => {
+        const checkCommunityZone = async () => {
+            try {
+                const res = await customFetch('/api/v1/system-configs');
+                if (res.ok) {
+                    const data = await res.json();
+                    const zoneConfig = data.find(c => c.configKey === 'ENABLE_COMMUNITY_ZONE');
+                    if (zoneConfig) {
+                        setShowCommunity(zoneConfig.configValue.trim().toLowerCase() === 'true');
+                    }
+                }
+            } catch (err) {
+                console.error("導航列載入設定失敗", err);
+            }
+        };
+        checkCommunityZone();
+        const timer = setInterval(checkCommunityZone, 15000);
+        return () => clearInterval(timer);
+    }, []);
+
     const navItems = [
         { id: 'about', label: '🥘 關於小灶' },
         { id: 'menu', label: '📖 精選菜單' },
+        showCommunity && { id: 'stories', label: '📸 灶下動態' },
         { id: 'faq', label: '❓ 常見問題' },
         { id: 'track', label: '🔍 訂單追蹤' }
-    ];
+    ].filter(Boolean);
 
     const handleNavClick = (sectionId) => {
         if (sectionId === 'track') {
             onSectionChange('track');
             navigate('/track');
+            return;
+        }
+
+        if (sectionId === 'stories') {
+            onSectionChange('stories');
+            navigate('/stories');
             return;
         }
 

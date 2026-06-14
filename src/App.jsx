@@ -7,6 +7,7 @@ import CustomerSPA from './pages/CustomerSPA';
 import CustomerTrack from './pages/CustomerTrack';
 import AdminPortal from './pages/AdminPortal';
 import ReceiptView from './pages/ReceiptView';
+import CommunityView from './pages/CommunityView';
 import { customFetch } from './utils/helpers';
 
 export default function App() {
@@ -140,6 +141,8 @@ export default function App() {
                 <Route path="/admin-portal-xyz" element={<AdminPortal />} />
 
                 <Route path="/receipt/:orderId" element={<ReceiptView />} />
+
+                <Route path="/stories" element={<CommunityView />} />
             </Routes>
 
             <ShoppingCart 

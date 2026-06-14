@@ -79,6 +79,12 @@ const ConfigsTab = ({
     adminIgLink,
     setAdminIgLink,
     handleSaveIgLink,
+    adminEnableCommunityZone,
+    setAdminEnableCommunityZone,
+    handleSaveCommunityZone,
+    adminEnableCommunityComments,
+    setAdminEnableCommunityComments,
+    handleSaveCommunityComments,
     faqList,
     isConfigsLoading,
     editingFaqId,
@@ -156,6 +162,48 @@ const ConfigsTab = ({
                             placeholder="placeholder: https://www.instagram.com/jwkl_cuisine/"
                         />
                         <button className="btn btn-primary btn-sm" onClick={handleSaveIgLink} style={{ marginTop: '8px', width: 'auto' }}>儲存 IG 連結</button>
+                    </div>
+
+                    {/* 🔒 雙重危機防護緊急卡控開關 */}
+                    <div className="form-group" style={{ borderTop: '2px dashed var(--color-danger, #dc2626)', paddingTop: '16px', marginTop: '8px' }}>
+                        <label className="form-label" style={{ color: 'var(--color-danger, #dc2626)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            🚨 動態專區危機防護卡控 (一鍵避險)
+                        </label>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                            <div>
+                                <label style={{ fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>1. 前台動態專區顯示</label>
+                                <select 
+                                    className="form-control"
+                                    value={adminEnableCommunityZone}
+                                    onChange={(e) => setAdminEnableCommunityZone(e.target.value)}
+                                    style={{ border: adminEnableCommunityZone === 'false' ? '1.5px solid var(--color-danger)' : '1px solid var(--color-border)' }}
+                                >
+                                    <option value="true">🟢 正常啟用 (前台顯示專區)</option>
+                                    <option value="false">🔴 緊急隱蔽 (完全關閉前台動態專區)</option>
+                                </select>
+                                <button className="btn btn-primary btn-sm" onClick={handleSaveCommunityZone} style={{ marginTop: '6px', width: 'auto', backgroundColor: adminEnableCommunityZone === 'false' ? 'var(--color-danger)' : 'var(--color-primary)' }}>儲存顯示設定</button>
+                            </div>
+
+                            <div style={{ marginTop: '8px', borderTop: '1px dotted var(--color-border)', paddingTop: '10px' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>2. 前台動態留言功能</label>
+                                <select 
+                                    className="form-control"
+                                    value={adminEnableCommunityComments}
+                                    onChange={(e) => setAdminEnableCommunityComments(e.target.value)}
+                                    style={{ border: adminEnableCommunityComments === 'false' ? '1.5px solid var(--color-danger)' : '1px solid var(--color-border)' }}
+                                >
+                                    <option value="true">🟢 正常開啟 (允許前台留言)</option>
+                                    <option value="false">🔴 緊急關閉 (停用前台留言發言功能)</option>
+                                </select>
+                                <button className="btn btn-primary btn-sm" onClick={handleSaveCommunityComments} style={{ marginTop: '6px', width: 'auto', backgroundColor: adminEnableCommunityComments === 'false' ? 'var(--color-danger)' : 'var(--color-primary)' }}>儲存留言設定</button>
+                            </div>
+                        </div>
+                        <small style={{ display: 'block', marginTop: '10px', fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: '1.4' }}>
+                            💡 <b>防護機制說明：</b><br />
+                            - 若選擇「緊急隱蔽」，前台導覽列將隱藏動態專區，且手動輸入網址也會被重定向回首頁。<br />
+                            - 若選擇「緊急關閉」，前台動態將不提供留言表單，且後端 API 寫入亦會直接阻斷並回傳 403 錯誤。
+                        </small>
                     </div>
                 </div>
 
