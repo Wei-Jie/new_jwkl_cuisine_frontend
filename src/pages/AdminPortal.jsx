@@ -500,31 +500,46 @@ export default function AdminPortal() {
 
         const dbOrderItems = orderItems.filter(oi => (oi.orderId === editingOrder.order_id || oi.order_id === editingOrder.order_id));
         
-        // 1. 計算新已完成數量
-        const newCompletedMap = {};
-        editingOrderItems.forEach(item => {
-            if (item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT') return;
-            const isNewCompleted = item.itemStatus === '已完成' || item.item_status === '已完成';
-            if (isNewCompleted) {
-                const pId = item.productId || item.product_id;
-                newCompletedMap[pId] = (newCompletedMap[pId] || 0) + (parseInt(item.qty) || 0);
+        // 1. 計算淨新增已完成庫存需求 (比對舊明細的狀態與數量)
+        const itemDiffMap = {};
+        editingOrderItems.forEach(newItem => {
+            if (newItem.productId === 'PROD_DISCOUNT' || newItem.product_id === 'PROD_DISCOUNT') return;
+            const pId = newItem.productId || newItem.product_id;
+            const newStatus = newItem.itemStatus || newItem.item_status || '待製作';
+            const newQty = parseInt(newItem.qty) || 0;
+
+            // 尋找資料庫中對應的舊明細 (優先用 id 匹配，次用商品 ID 匹配)
+            const oldItem = dbOrderItems.find(oi => 
+                (newItem.id && oi.id === newItem.id) || 
+                (oi.productId === pId || oi.product_id === pId)
+            );
+
+            let itemDiff = 0;
+            if (newStatus === '已完成') {
+                if (oldItem) {
+                    const oldStatus = oldItem.itemStatus || oldItem.item_status || '待製作';
+                    const oldQty = parseInt(oldItem.qty) || 0;
+                    if (oldStatus === '已完成') {
+                        // 本來就是已完成：只有在數量增加時，才需要比對增加的部分
+                        itemDiff = Math.max(0, newQty - oldQty);
+                    } else {
+                        // 本來不是已完成，現在變成已完成：需要完整數量的庫存
+                        itemDiff = newQty;
+                    }
+                } else {
+                    // 新增的明細且狀態為已完成：需要完整數量的庫存
+                    itemDiff = newQty;
+                }
+            }
+            
+            if (itemDiff > 0) {
+                itemDiffMap[pId] = (itemDiffMap[pId] || 0) + itemDiff;
             }
         });
 
-        // 2. 計算舊已完成數量
-        const oldCompletedMap = {};
-        dbOrderItems.forEach(item => {
-            if (item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT') return;
-            const isOldCompleted = item.itemStatus === '已完成' || item.item_status === '已完成';
-            if (isOldCompleted) {
-                const pId = item.productId || item.product_id;
-                oldCompletedMap[pId] = (oldCompletedMap[pId] || 0) + (parseInt(item.qty) || 0);
-            }
-        });
-
-        // 3. 淨增量比對可用自由庫存
-        for (const pId of Object.keys(newCompletedMap)) {
-            const diff = newCompletedMap[pId] - (oldCompletedMap[pId] || 0);
+        // 2. 淨增量比對可用自由庫存
+        for (const pId of Object.keys(itemDiffMap)) {
+            const diff = itemDiffMap[pId];
             if (diff > 0) {
                 const menu = menuList.find(m => m.productId === pId || m.product_id === pId);
                 if (menu && menu.isStockManaged) {
