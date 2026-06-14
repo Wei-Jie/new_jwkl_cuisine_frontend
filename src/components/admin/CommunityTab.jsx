@@ -394,21 +394,23 @@ const CommunityTab = () => {
                                                 )}
                                             </td>
                                             <td data-label="動態主題/內文摘要">
-                                                {post.title ? (
-                                                    <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>{post.title}</strong>
-                                                ) : null}
-                                                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'pre-wrap' }}>
-                                                    {post.content}
-                                                </div>
-                                                {post.tags ? (
-                                                    <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
-                                                        {post.tags.split(',').map((t, i) => (
-                                                            <span key={i} style={{ fontSize: '10px', backgroundColor: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '10px' }}>
-                                                                #{t.trim()}
-                                                            </span>
-                                                        ))}
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', width: '100%' }}>
+                                                    {post.title ? (
+                                                        <strong style={{ display: 'block', fontSize: '14px', marginBottom: '4px' }}>{post.title}</strong>
+                                                    ) : null}
+                                                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'pre-wrap', width: '100%' }}>
+                                                        {post.content}
                                                     </div>
-                                                ) : null}
+                                                    {post.tags ? (
+                                                        <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                            {post.tags.split(',').map((t, i) => (
+                                                                <span key={i} style={{ fontSize: '10px', backgroundColor: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                                                                    #{t.trim()}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    ) : null}
+                                                </div>
                                             </td>
                                             <td data-label="狀態">
                                                 <span style={{ 
