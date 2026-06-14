@@ -500,63 +500,69 @@ export default function AdminPortal() {
 
         const dbOrderItems = orderItems.filter(oi => (oi.orderId === editingOrder.order_id || oi.order_id === editingOrder.order_id));
         
-        // 1. 計算淨新增已完成庫存需求 (比對舊明細的狀態與數量)
-        const itemDiffMap = {};
-        editingOrderItems.forEach(newItem => {
-            if (newItem.productId === 'PROD_DISCOUNT' || newItem.product_id === 'PROD_DISCOUNT') return;
-            const pId = newItem.productId || newItem.product_id;
-            const newStatus = newItem.itemStatus || newItem.item_status || '待製作';
-            const newQty = parseInt(newItem.qty) || 0;
+        // 1. 庫存防守檢查：若該訂單在資料庫中的原本狀態已經是「已出貨」或「已結單」，代表實體庫存早已扣除，編輯時無需再進行可用庫存防守檢查。
+        const dbOrder = allOrders.find(o => o.order_id === editingOrder.order_id);
+        const dbOrderStatus = dbOrder ? dbOrder.status : '待確認';
+        
+        if (dbOrderStatus !== '已出貨' && dbOrderStatus !== '已結單') {
+            // 計算淨新增已完成庫存需求 (比對舊明細的狀態與數量)
+            const itemDiffMap = {};
+            editingOrderItems.forEach(newItem => {
+                if (newItem.productId === 'PROD_DISCOUNT' || newItem.product_id === 'PROD_DISCOUNT') return;
+                const pId = newItem.productId || newItem.product_id;
+                const newStatus = newItem.itemStatus || newItem.item_status || '待製作';
+                const newQty = parseInt(newItem.qty) || 0;
 
-            // 尋找資料庫中對應的舊明細 (優先用 id 匹配，次用商品 ID 匹配)
-            const oldItem = dbOrderItems.find(oi => 
-                (newItem.id && oi.id === newItem.id) || 
-                (oi.productId === pId || oi.product_id === pId)
-            );
+                // 尋找資料庫中對應的舊明細 (優先用 id 匹配，次用商品 ID 匹配)
+                const oldItem = dbOrderItems.find(oi => 
+                    (newItem.id && oi.id === newItem.id) || 
+                    (oi.productId === pId || oi.product_id === pId)
+                );
 
-            let itemDiff = 0;
-            if (newStatus === '已完成') {
-                if (oldItem) {
-                    const oldStatus = oldItem.itemStatus || oldItem.item_status || '待製作';
-                    const oldQty = parseInt(oldItem.qty) || 0;
-                    if (oldStatus === '已完成') {
-                        // 本來就是已完成：只有在數量增加時，才需要比對增加的部分
-                        itemDiff = Math.max(0, newQty - oldQty);
+                let itemDiff = 0;
+                if (newStatus === '已完成') {
+                    if (oldItem) {
+                        const oldStatus = oldItem.itemStatus || oldItem.item_status || '待製作';
+                        const oldQty = parseInt(oldItem.qty) || 0;
+                        if (oldStatus === '已完成') {
+                            // 本來就是已完成：只有在數量增加時，才需要比對增加的部分
+                            itemDiff = Math.max(0, newQty - oldQty);
+                        } else {
+                            // 本來不是已完成，現在變成已完成：需要完整數量的庫存
+                            itemDiff = newQty;
+                        }
                     } else {
-                        // 本來不是已完成，現在變成已完成：需要完整數量的庫存
+                        // 新增的明細且狀態為已完成：需要完整數量的庫存
                         itemDiff = newQty;
                     }
-                } else {
-                    // 新增的明細且狀態為已完成：需要完整數量的庫存
-                    itemDiff = newQty;
                 }
-            }
-            
-            if (itemDiff > 0) {
-                itemDiffMap[pId] = (itemDiffMap[pId] || 0) + itemDiff;
-            }
-        });
+                
+                if (itemDiff > 0) {
+                    itemDiffMap[pId] = (itemDiffMap[pId] || 0) + itemDiff;
+                }
+            });
 
-        // 2. 淨增量比對可用自由庫存
-        for (const pId of Object.keys(itemDiffMap)) {
-            const diff = itemDiffMap[pId];
-            if (diff > 0) {
-                const menu = menuList.find(m => m.productId === pId || m.product_id === pId);
-                if (menu && menu.isStockManaged) {
-                    const allStock = menu.stock || 0;
-                    const resStock = orderItems.filter(item => {
-                        if (item.productId !== menu.productId && item.product_id !== menu.productId) return false;
-                        if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
-                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
-                        if (!parent) return false;
-                        return parent.status !== '停用' && parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
-                    }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
-                    
-                    const freeStock = allStock - resStock;
+            // 淨增量比對可用自由庫存
+            for (const pId of Object.keys(itemDiffMap)) {
+                const diff = itemDiffMap[pId];
+                if (diff > 0) {
+                    const menu = menuList.find(m => m.productId === pId || m.product_id === pId);
+                    if (menu && menu.isStockManaged) {
+                        const allStock = menu.stock || 0;
+                        const resStock = orderItems.filter(item => {
+                            if (item.productId !== menu.productId && item.product_id !== menu.productId) return false;
+                            if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
+                            const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                            if (!parent) return false;
+                            return parent.status !== '停用' && parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
+                        }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
+                        
+                        const freeStock = allStock - resStock;
 
-                    if (diff > freeStock) {
-                        alert(`❌ 儲存失敗：庫存不足！\n品項「${menu.name}」目前可用自由庫存僅剩 ${freeStock}，但您本次變更或新增已完成的數量為 ${diff}。\n請先至「庫存入庫管理」補足庫存，或調整排程狀態！`);
-                        return;
+                        if (diff > freeStock) {
+                            alert(`❌ 儲存失敗：庫存不足！\n品項「${menu.name}」目前可用自由庫存僅剩 ${freeStock}，但您本次變更或新增已完成的數量為 ${diff}。\n請先至「庫存入庫管理」補足庫存，或調整排程狀態！`);
+                            return;
+                        }
                     }
                 }
             }
