@@ -821,17 +821,52 @@ const CommunityTab = () => {
                                         />
                                     </label>
                                 </div>
-                                {postForm.coverImageUrl && (
-                                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>圖片預覽：</span>
-                                        <img 
-                                            src={postForm.coverImageUrl} 
-                                            alt="圖片預覽" 
-                                            style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--color-border)' }}
-                                            onError={(e) => {
-                                                e.target.style.display = 'none';
-                                            }}
-                                        />
+                                {imageUrlList.length > 0 && (
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        gap: '12px', 
+                                        flexWrap: 'wrap', 
+                                        marginTop: '12px',
+                                        padding: '12px',
+                                        backgroundColor: '#f8fafc',
+                                        borderRadius: '8px',
+                                        border: '1px solid #e2e8f0'
+                                    }}>
+                                        {imageUrlList.map((url, index) => (
+                                            <div key={index} style={{ position: 'relative', width: '70px', height: '70px' }}>
+                                                <img 
+                                                    src={url} 
+                                                    alt={`預覽 ${index + 1}`} 
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setImageUrlList(prev => prev.filter((_, idx) => idx !== index));
+                                                    }}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        top: '-6px',
+                                                        right: '-6px',
+                                                        backgroundColor: '#ef4444',
+                                                        color: '#ffffff',
+                                                        border: 'none',
+                                                        borderRadius: '50%',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '10px',
+                                                        cursor: 'pointer',
+                                                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                                                    }}
+                                                    title="移除圖片"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
