@@ -54,6 +54,7 @@ export default function AdminPortal() {
     // 3. 訂單管理與編輯訂單彈窗狀態
     // ==========================================
     const [orders, setOrders] = useState([]);
+    const [allOrders, setAllOrders] = useState([]);
     const [isOrdersLoading, setIsOrdersLoading] = useState(false);
     const [showEditOrderModal, setShowEditOrderModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
@@ -145,8 +146,7 @@ export default function AdminPortal() {
     // API 查詢與加載方法
     // ==========================================
 
-    const fetchOrders = async () => {
-        setIsOrdersLoading(true);
+    const fetchAllOrders = async () => {
         try {
             const config = { headers: {} };
             const res = await customFetch('/api/v1/orders/all', config);
@@ -167,16 +167,17 @@ export default function AdminPortal() {
                     const numB = parseInt(String(b.order_id).replace(/\D/g, ''), 10) || 0;
                     return numA - numB;
                 });
-                setOrders(normalized);
+                setAllOrders(normalized);
             }
         } catch (err) {
-            console.log("無法獲取真實訂單，保留預設資料");
-        } finally {
-            setIsOrdersLoading(false);
+            console.log("無法獲取真實訂單，保留預設資料", err);
         }
     };
 
     const fetchOrdersWithFilters = async (statusVal = filterStatus, startVal = filterStartDate, endVal = filterEndDate) => {
+        // 在背景更新全量訂單列表，以保持庫存摘要/保留量統計為最新狀態
+        fetchAllOrders();
+
         // 其餘狀態必須選擇日期進行過篩，若無日期直接不查詢並設為空，以防止載入大量數據
         if (statusVal !== '待確認' && statusVal !== '已接單' && statusVal !== '已完成') {
             if (!startVal || !endVal) {
@@ -356,20 +357,20 @@ export default function AdminPortal() {
         } else if (activeTab === 'schedules') {
             fetchMenuList();
             fetchOrderItems();
-            fetchOrders();
+            fetchAllOrders();
         } else if (activeTab === 'menu') {
             fetchMenuList();
         } else if (activeTab === 'expenses') {
             fetchExpenses();
         } else if (activeTab === 'analytics') {
             fetchExpenses();
-            fetchOrders();
+            fetchAllOrders();
             fetchOrderItems();
             fetchMenuList();
         } else if (activeTab === 'inventory') {
             fetchMenuList();
             fetchOrderItems();
-            fetchOrders();
+            fetchAllOrders();
         } else if (activeTab === 'configs') {
             fetchAdminConfigsAndFaqs();
         }
@@ -531,7 +532,7 @@ export default function AdminPortal() {
                     const resStock = orderItems.filter(item => {
                         if (item.productId !== menu.productId && item.product_id !== menu.productId) return false;
                         if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
-                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                         if (!parent) return false;
                         return parent.status !== '停用' && parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
                     }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
@@ -807,7 +808,7 @@ export default function AdminPortal() {
                     const resStock = orderItems.filter(item => {
                         if (item.productId !== currentProductMenu.productId && item.product_id !== currentProductMenu.productId) return false;
                         if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
-                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                         if (!parent) return false;
                         return parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
                     }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
@@ -877,13 +878,14 @@ export default function AdminPortal() {
                         return { ...oi, itemStatus: schedule.status, item_status: schedule.status };
                     });
                 },
-                getOrder: (orderId) => orders.find(o => o.order_id === orderId),
+                getOrder: (orderId) => allOrders.find(o => o.order_id === orderId),
                 apiFetch: customFetch
             });
             const upgradeMsg = formatUpgradeMessage(upgraded);
             alert('製作狀態異動儲存成功！' + upgradeMsg);
             await fetchSchedules(queriedProducts);
             fetchOrderItems();
+            fetchAllOrders();
         } catch (err) {
             alert('儲存狀態失敗，請確認網路連線');
         } finally {
@@ -1086,7 +1088,7 @@ export default function AdminPortal() {
         const start = new Date(analysisStartDate).getTime();
         const end = new Date(analysisEndDate).getTime() + 86400000 - 1;
 
-        const filteredOrders = orders.filter(o => {
+        const filteredOrders = allOrders.filter(o => {
             const t = parseDate(o.order_date);
             return t >= start && t <= end;
         });
@@ -1116,7 +1118,7 @@ export default function AdminPortal() {
 
         const productStats = {};
         orderItems.forEach(item => {
-            const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+            const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
             if (parent) {
                 const oDate = parseDate(parent.order_date);
                 if (oDate >= start && oDate <= end) {
@@ -1563,6 +1565,7 @@ export default function AdminPortal() {
                 {activeTab === 'orders' && (
                     <OrdersTab
                         orders={orders}
+                        allOrders={allOrders}
                         orderItems={orderItems}
                         isOrdersLoading={isOrdersLoading}
                         filterStartDate={filterStartDate}
@@ -1601,7 +1604,7 @@ export default function AdminPortal() {
                         scheduleMenu={scheduleMenu}
                         checkedItemIds={checkedItemIds}
                         isSmiLoading={isSmiLoading}
-                        orders={orders}
+                        orders={allOrders}
                         orderItems={orderItems}
                         menuList={menuList}
                         queriedProducts={queriedProducts}
@@ -1666,7 +1669,7 @@ export default function AdminPortal() {
                     <InventoryTab
                         menuList={menuList}
                         orderItems={orderItems}
-                        orders={orders}
+                        orders={allOrders}
                         setMenuList={setMenuList}
                         selectedInvProduct={selectedInvProduct}
                         setSelectedInvProduct={setSelectedInvProduct}

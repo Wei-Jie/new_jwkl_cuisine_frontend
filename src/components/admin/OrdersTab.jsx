@@ -3,6 +3,7 @@ import EditOrderModal from './EditOrderModal';
 
 export default function OrdersTab({
     orders,
+    allOrders = [],
     orderItems = [],
     isOrdersLoading,
     filterStartDate,
@@ -231,7 +232,7 @@ export default function OrdersTab({
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
                                         if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
-                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                         if (!parent) return false;
                                         return parent.status !== '已出貨' && parent.status !== '已結單' && parent.status !== '已取消' && parent.status !== '已退回';
                                     }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
@@ -242,7 +243,7 @@ export default function OrdersTab({
                                     const totalDemand = orderItems.filter(item => {
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
-                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                         return parent && parent.status === '已接單';
                                     }).reduce((sum, item) => {
                                         const q = parseFloat(item.qty) || 0;
@@ -255,7 +256,7 @@ export default function OrdersTab({
                                         const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
                                         if (!isMatch) return false;
                                         if ((item.itemStatus || item.item_status) !== '待製作') return false;
-                                        const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+                                        const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                         return parent && parent.status === '已接單';
                                     }).reduce((sum, item) => {
                                         const q = parseFloat(item.qty) || 0;
