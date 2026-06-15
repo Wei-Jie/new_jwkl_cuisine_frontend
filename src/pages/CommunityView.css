@@ -985,3 +985,133 @@
   transform: scale(1.01);
 }
 
+/* ========================================================
+   SNS 分享按鈕列高質感設計
+   ======================================================== */
+.sns-share-bar {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.sns-share-label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+}
+
+.sns-share-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sns-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition);
+  outline: none;
+}
+
+/* 複製連結按鈕樣式 */
+.sns-btn.copy {
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+.sns-btn.copy:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+  transform: translateY(-2px);
+}
+.sns-btn.copy.copied {
+  background-color: #ecfdf5;
+  border-color: #10b981;
+  color: #047857;
+  transform: scale(1.02);
+}
+
+/* LINE 分享按鈕樣式 */
+.sns-btn.line {
+  background-color: #ffffff;
+  color: #06c755;
+  border-color: #06c755;
+}
+.sns-btn.line:hover {
+  background-color: #06c755;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2);
+}
+
+/* FB 分享按鈕樣式 */
+.sns-btn.fb {
+  background-color: #ffffff;
+  color: #1877f2;
+  border-color: #1877f2;
+}
+.sns-btn.fb:hover {
+  background-color: #1877f2;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.2);
+}
+
+/* 點閱次數樣式 */
+.lightbox-views {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.blog-card-views {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.serial-views-meta {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 微調燈箱 metadata 結構 */
+.lightbox-author-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+

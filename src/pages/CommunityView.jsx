@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, MessageSquare, Send, Calendar, Tag } from 'lucide-react';
 import { customFetch } from '../utils/helpers';
 import './CommunityView.css';
 
 export default function CommunityView() {
     const navigate = useNavigate();
+    const location = useLocation();
     
     // 狀態定義
     const [activeCategory, setActiveCategory] = useState('STORY'); // STORY, ANNOUNCEMENT, EVENT, SERIAL
@@ -21,6 +22,10 @@ export default function CommunityView() {
     const [comments, setComments] = useState([]);
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
     const [currentImgIndex, setCurrentImgIndex] = useState(0); // 隨筆多圖輪播 Index
+    
+    // 防刷與分享狀態
+    const [viewedPostIds, setViewedPostIds] = useState(new Set());
+    const [copied, setCopied] = useState(false);
     
     // 計算選中文章的圖片清單
     const imageUrls = selectedPost?.coverImageUrl ? selectedPost.coverImageUrl.split(',') : [];
@@ -131,6 +136,136 @@ export default function CommunityView() {
 
         fetchComments();
     }, [selectedPost]);
+
+    // 3.5 瀏覽次數非同步累加與即時更新
+    useEffect(() => {
+        if (!selectedPost) return;
+        
+        const postId = selectedPost.id;
+        if (!viewedPostIds.has(postId)) {
+            const incrementView = async () => {
+                try {
+                    const res = await customFetch(`/api/v1/posts/${postId}/view`, {
+                        method: 'POST'
+                    });
+                    if (res.ok) {
+                        setViewedPostIds(prev => {
+                            const newSet = new Set(prev);
+                            newSet.add(postId);
+                            return newSet;
+                        });
+                        
+                        // 即時更新前端顯示
+                        setPosts(prevPosts => 
+                            prevPosts.map(p => 
+                                p.id === postId ? { ...p, views: (p.views || 0) + 1 } : p
+                            )
+                        );
+                        setSelectedPost(prev => 
+                            prev && prev.id === postId ? { ...prev, views: (prev.views || 0) + 1 } : prev
+                        );
+                    }
+                } catch (err) {
+                    console.error("累加瀏覽量失敗", err);
+                }
+            };
+            incrementView();
+        }
+    }, [selectedPost, viewedPostIds]);
+
+    // 3.6 偵測網址參數以自動開啟指定文章燈箱
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const postId = params.get('post');
+        if (postId) {
+            const id = parseInt(postId, 10);
+            if (!isNaN(id)) {
+                const matched = posts.find(p => p.id === id);
+                if (matched) {
+                    if (!selectedPost || selectedPost.id !== id) {
+                        setSelectedPost(matched);
+                    }
+                } else {
+                    // 若當前列表中無此文章，單獨拉取
+                    const fetchSinglePost = async () => {
+                        try {
+                            const res = await customFetch(`/api/v1/posts/${id}`);
+                            if (res.ok) {
+                                const p = await res.json();
+                                const normalized = {
+                                    ...p,
+                                    coverImageUrl: p.coverImageUrl || p.cover_image_url || '',
+                                    cover_image_url: p.coverImageUrl || p.cover_image_url || '',
+                                    chapterNum: p.chapterNum !== undefined ? p.chapterNum : p.chapter_num,
+                                    chapter_num: p.chapterNum !== undefined ? p.chapterNum : p.chapter_num,
+                                    createdAt: p.createdAt || p.created_at,
+                                    created_at: p.createdAt || p.created_at
+                                };
+                                if (normalized.category && normalized.category !== activeCategory) {
+                                    setActiveCategory(normalized.category);
+                                }
+                                setSelectedPost(normalized);
+                            }
+                        } catch (e) {
+                            console.error("載入指定文章失敗", e);
+                        }
+                    };
+                    fetchSinglePost();
+                }
+            }
+        }
+    }, [location.search, posts]);
+
+    // 3.7 selectedPost 與網址的雙向連動
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const currentUrlPostId = params.get('post');
+        
+        if (selectedPost) {
+            if (currentUrlPostId !== String(selectedPost.id)) {
+                navigate(`/stories?post=${selectedPost.id}`, { replace: true });
+            }
+        } else {
+            if (currentUrlPostId) {
+                navigate('/stories', { replace: true });
+            }
+        }
+    }, [selectedPost, location.search, navigate]);
+
+    // 3.8 SNS 分享相關處理函數
+    const getShareUrl = () => {
+        return `${window.location.origin}${window.location.pathname}#/stories?post=${selectedPost.id}`;
+    };
+
+    const handleCopyLink = (e) => {
+        e.stopPropagation();
+        const shareUrl = getShareUrl();
+        navigator.clipboard.writeText(shareUrl)
+            .then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            })
+            .catch(err => {
+                console.error('複製失敗', err);
+                alert('無法複製連結，請手動複製瀏覽器網址列！');
+            });
+    };
+
+    const handleShareToLine = (e) => {
+        e.stopPropagation();
+        const shareUrl = getShareUrl();
+        const title = selectedPost.title || (selectedPost.category === 'STORY' ? '日常隨筆' : '灶下動態');
+        const text = `【小灶私廚】分享一篇溫暖的動態：${title}\n${shareUrl}`;
+        const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+        window.open(lineUrl, '_blank');
+    };
+
+    const handleShareToFb = (e) => {
+        e.stopPropagation();
+        const shareUrl = getShareUrl();
+        const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        window.open(fbUrl, '_blank');
+    };
 
     // 4. 發言功能
     const handleCommentSubmit = async (e) => {
@@ -353,7 +488,10 @@ export default function CommunityView() {
                                                     <div className="story-text-preview">{post.content}</div>
                                                     <div className="story-text-meta">
                                                         <span>✍️ 闆娘隨筆</span>
-                                                        <span>{formatDateTime(post.createdAt).split(' ')[0]}</span>
+                                                        <span style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                            <span>👁️ {post.views || 0}</span>
+                                                            <span>{formatDateTime(post.createdAt).split(' ')[0]}</span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             )}
@@ -393,6 +531,7 @@ export default function CommunityView() {
                                                         <span className="tag-chip">#{activeCategory === 'ANNOUNCEMENT' ? '公告' : '活動'}</span>
                                                     )}
                                                 </div>
+                                                <span className="blog-card-views">👁️ {post.views || 0} 次瀏覽</span>
                                                 <span className="read-more-text">閱讀全文 →</span>
                                             </div>
                                         </div>
@@ -422,6 +561,7 @@ export default function CommunityView() {
                                             </div>
                                             <div className="serial-card-meta">
                                                 <span>📅 連載日期: {formatDateTime(post.createdAt).split(' ')[0]}</span>
+                                                <span className="serial-views-meta">👁️ {post.views || 0} 次瀏覽</span>
                                                 <span className="read-more-text">點擊閱讀章節 →</span>
                                             </div>
                                         </div>
@@ -524,7 +664,10 @@ export default function CommunityView() {
                                                     {selectedPost.category === 'STORY' ? '闆娘隨筆' : 
                                                      selectedPost.category === 'SERIAL' ? '故事連載' : '小灶私廚'}
                                                 </h4>
-                                                <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
+                                                <div className="lightbox-meta-row">
+                                                    <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
+                                                    <span className="lightbox-views">👁️ {selectedPost.views || 0} 次瀏覽</span>
+                                                </div>
                                             </div>
                                         </div>
                                         {selectedPost.title && (
@@ -561,6 +704,22 @@ export default function CommunityView() {
                                                 </button>
                                             </div>
                                         )}
+
+                                     {/* SNS 一鍵分享按鈕列 */}
+                                     <div className="sns-share-bar">
+                                         <span className="sns-share-label">分享這篇動態：</span>
+                                         <div className="sns-share-buttons">
+                                             <button className={`sns-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink} title="複製專屬連結">
+                                                 {copied ? '✅ 已複製連結！' : '🔗 複製連結'}
+                                             </button>
+                                             <button className="sns-btn line" onClick={handleShareToLine} title="分享至 LINE">
+                                                 🟢 LINE 分享
+                                             </button>
+                                             <button className="sns-btn fb" onClick={handleShareToFb} title="分享至 Facebook">
+                                                 🔵 FB 分享
+                                             </button>
+                                         </div>
+                                     </div>
 
                                     {/* 留言系統區塊 */}
                                     <div className="comments-section">

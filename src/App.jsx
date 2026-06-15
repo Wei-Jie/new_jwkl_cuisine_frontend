@@ -1,6 +1,6 @@
 // 強制重新部署以刷清 Vercel Edge CDN 的快取
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import ShoppingCart from './components/ShoppingCart';
 import CustomerSPA from './pages/CustomerSPA';
@@ -9,6 +9,48 @@ import AdminPortal from './pages/AdminPortal';
 import ReceiptView from './pages/ReceiptView';
 import CommunityView from './pages/CommunityView';
 import { customFetch } from './utils/helpers';
+
+// GA4 全站追蹤與 SPA 路由監聽器
+function GA4Tracker() {
+    const location = useLocation();
+
+    // 1. 初始化 GA4 Script 載入
+    useEffect(() => {
+        const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID || window.VITE_GA_MEASUREMENT_ID;
+        if (gaId && gaId.trim() !== "" && !window.gtag) {
+            // 動態載入 gtag.js
+            const script1 = document.createElement("script");
+            script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+            script1.async = true;
+            document.head.appendChild(script1);
+
+            const script2 = document.createElement("script");
+            script2.innerHTML = `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}', { 'send_page_view': false });
+            `;
+            document.head.appendChild(script2);
+            
+            window.gtag = function() {
+                window.dataLayer.push(arguments);
+            };
+        }
+    }, []);
+
+    // 2. 監聽 SPA 路由變化，發送 page_view 事件
+    useEffect(() => {
+        const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID || window.VITE_GA_MEASUREMENT_ID;
+        if (gaId && gaId.trim() !== "" && window.gtag) {
+            window.gtag('event', 'page_view', {
+                page_path: location.pathname + location.search + location.hash
+            });
+        }
+    }, [location]);
+
+    return null;
+}
 
 export default function App() {
     const [cart, setCart] = useState([]);
@@ -114,6 +156,7 @@ export default function App() {
 
     return (
         <HashRouter>
+            <GA4Tracker />
             <Header 
                 cartCount={cart.reduce((sum, item) => sum + item.qty, 0)} 
                 onCartOpen={() => setIsCartOpen(true)}
