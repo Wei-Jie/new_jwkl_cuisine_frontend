@@ -9,11 +9,13 @@ const AnalyticsTab = ({
     analysisEndDate,
     setAnalysisEndDate,
     handleDateRangeModeChange,
-    analyticsData
+    analyticsData,
+    analyticsDateBasis,
+    setAnalyticsDateBasis
 }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div className="card" style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #cbd5e1' }}>
+            <div className="card" style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>📅 分析時間區間：</span>
@@ -63,20 +65,38 @@ const AnalyticsTab = ({
                         />
                     </div>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-secondary)' }}>📊 統計日期基準：</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        {[
+                            { id: 'order_date', label: '下單日期 (成立日期)' },
+                            { id: 'payment_date', label: '收款日期 (實際入帳)' }
+                        ].map(basis => (
+                            <button
+                                key={basis.id}
+                                onClick={() => setAnalyticsDateBasis(basis.id)}
+                                className={`btn btn-sm ${analyticsDateBasis === basis.id ? 'btn-primary' : 'btn-outline'}`}
+                                style={{ padding: '4px 12px', fontSize: '12px', minHeight: '28px', borderRadius: '15px' }}
+                            >
+                                {basis.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             <div className="stats-cards">
                 <div className="stat-card" style={{ background: 'linear-gradient(135deg, var(--color-success-light) 0%, #ffffff 100%)', borderLeft: '5px solid var(--color-success)' }}>
                     <div>
                         <div className="stat-label">💰 區間累計總營收</div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>已接單預約之金額加總</div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>已接單預約之金額加總 (依{analyticsDateBasis === 'order_date' ? '下單' : '收款'}日期統計)</div>
                     </div>
                     <div className="stat-value" style={{ color: 'var(--color-success)' }}>${analyticsData.totalRevenue.toLocaleString()}</div>
                 </div>
                 <div className="stat-card" style={{ background: 'linear-gradient(135deg, var(--color-danger-light) 0%, #ffffff 100%)', borderLeft: '5px solid var(--color-danger)' }}>
                     <div>
                         <div className="stat-label">💸 區間採購總支出 (成本)</div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>所有已記入採購總成本</div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>所有已記入採購總成本 (固定依支出日期統計)</div>
                     </div>
                     <div className="stat-value" style={{ color: 'var(--color-danger)' }}>-${analyticsData.totalExpenses.toLocaleString()}</div>
                 </div>
@@ -107,7 +127,7 @@ const AnalyticsTab = ({
                 <div className="stat-card" style={{ background: 'linear-gradient(135deg, var(--color-warning-light) 0%, #ffffff 100%)', borderLeft: '5px solid var(--color-warning)' }}>
                     <div>
                         <div className="stat-label">⏳ 區間待收款總額</div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>區間內尚未收款的訂單加總</div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>區間內尚未收款的訂單加總 (固定依下單日期統計)</div>
                     </div>
                     <div className="stat-value" style={{ color: '#b45309', fontSize: '24px' }}>${analyticsData.unpaidAmount.toLocaleString()} 元</div>
                 </div>

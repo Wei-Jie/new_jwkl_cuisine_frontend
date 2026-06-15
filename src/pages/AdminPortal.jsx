@@ -74,6 +74,7 @@ export default function AdminPortal() {
     // 5. 營收利潤分析日期篩選與統計
     // ==========================================
     const [dateRangeMode, setDateRangeMode] = useState('month');
+    const [analyticsDateBasis, setAnalyticsDateBasis] = useState('order_date'); // 'order_date' | 'payment_date'
     const [analysisStartDate, setAnalysisStartDate] = useState(() => {
         const today = new Date();
         const y = today.getFullYear();
@@ -1124,8 +1125,16 @@ export default function AdminPortal() {
         const end = new Date(analysisEndDate).getTime() + 86400000 - 1;
 
         const filteredOrders = allOrders.filter(o => {
-            const t = parseDate(o.order_date);
-            return t >= start && t <= end;
+            if (analyticsDateBasis === 'payment_date') {
+                if (o.payment_status !== '已付款' || !o.payment_date) {
+                    return false;
+                }
+                const t = parseDate(o.payment_date);
+                return t >= start && t <= end;
+            } else {
+                const t = parseDate(o.order_date);
+                return t >= start && t <= end;
+            }
         });
 
         const filteredExpenses = expenses.filter(e => {
@@ -1142,7 +1151,11 @@ export default function AdminPortal() {
         const totalOrdersCount = filteredOrders.length;
         const avgOrderValue = totalOrdersCount > 0 ? (totalRevenue / totalOrdersCount).toFixed(1) : 0;
         
-        const unpaidAmount = filteredOrders
+        const unpaidAmount = allOrders
+            .filter(o => {
+                const t = parseDate(o.order_date);
+                return t >= start && t <= end;
+            })
             .filter(o => o.payment_status === '未付款' && o.status !== '已取消')
             .reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
 
@@ -1155,7 +1168,11 @@ export default function AdminPortal() {
         orderItems.forEach(item => {
             const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
             if (parent) {
-                const oDate = parseDate(parent.order_date);
+                if (analyticsDateBasis === 'payment_date') {
+                    if (parent.payment_status !== '已付款' || !parent.payment_date) return;
+                }
+                const dateVal = analyticsDateBasis === 'payment_date' ? parent.payment_date : parent.order_date;
+                const oDate = parseDate(dateVal);
                 if (oDate >= start && oDate <= end) {
                     const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
                     const pName = menu?.name || item.productId;
@@ -1199,9 +1216,13 @@ export default function AdminPortal() {
 
         const categoryRevenueMap = {};
         orderItems.forEach(item => {
-            const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
+            const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
             if (parent && parent.status !== '已取消') {
-                const oDate = parseDate(parent.order_date);
+                if (analyticsDateBasis === 'payment_date') {
+                    if (parent.payment_status !== '已付款' || !parent.payment_date) return;
+                }
+                const dateVal = analyticsDateBasis === 'payment_date' ? parent.payment_date : parent.order_date;
+                const oDate = parseDate(dateVal);
                 if (oDate >= start && oDate <= end) {
                     const cat = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id)?.category || '其他';
                     categoryRevenueMap[cat] = (categoryRevenueMap[cat] || 0) + (parseFloat(item.productTotalAmt) || 0);
@@ -1243,7 +1264,7 @@ export default function AdminPortal() {
             categoryRevenueMap,
             topCustomers
         };
-    }, [orders, expenses, orderItems, menuList, analysisStartDate, analysisEndDate]);
+    }, [allOrders, orders, expenses, orderItems, menuList, analysisStartDate, analysisEndDate, analyticsDateBasis]);
 
     const getPresetDateRange = (mode) => {
         const today = new Date();
@@ -1744,6 +1765,8 @@ export default function AdminPortal() {
                         setAnalysisEndDate={setAnalysisEndDate}
                         handleDateRangeModeChange={handleDateRangeModeChange}
                         analyticsData={analyticsData}
+                        analyticsDateBasis={analyticsDateBasis}
+                        setAnalyticsDateBasis={setAnalyticsDateBasis}
                     />
                 )}
 
