@@ -146,14 +146,23 @@ export default function AdminPortal() {
     const [checkedItemIds, setCheckedItemIds] = useState([]);
     const [isSmiLoading, setIsSmiLoading] = useState(false);
 
-    // 當 URL Query 參數中有 tab 時，自動選取對應的分頁 (供 Web Push 推播通知直達留言管理等分頁使用)
+    // 當 URL Query 參數中有 tab 時，自動選取對應的分頁 (供 Web Push 推播通知直達留言管理等分頁使用，支援 HashRouter)
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tabParam = params.get('tab');
-        if (tabParam) {
-            const validTabs = ['orders', 'schedules', 'menu', 'expenses', 'analytics', 'inventory', 'configs', 'community'];
-            if (validTabs.includes(tabParam)) {
-                setActiveTab(tabParam);
+        let queryString = window.location.search;
+        const hash = window.location.hash;
+        const queryIndex = hash.indexOf('?');
+        if (queryIndex !== -1) {
+            queryString = hash.substring(queryIndex);
+        }
+        
+        if (queryString) {
+            const params = new URLSearchParams(queryString);
+            const tabParam = params.get('tab');
+            if (tabParam) {
+                const validTabs = ['orders', 'schedules', 'menu', 'expenses', 'analytics', 'inventory', 'configs', 'community'];
+                if (validTabs.includes(tabParam)) {
+                    setActiveTab(tabParam);
+                }
             }
         }
     }, []);

@@ -8,7 +8,7 @@ self.addEventListener('push', function(event) {
         icon: '/pic/chef_mascot_transparent.png',
         badge: '/pic/chef_mascot_transparent.png',
         data: {
-          click_action: payload.click_action || '/admin'
+          click_action: payload.click_action || '/#/admin-portal-xyz'
         }
       };
       
@@ -33,7 +33,7 @@ self.addEventListener('notificationclick', function(event) {
   
   const clickAction = event.notification.data && event.notification.data.click_action
     ? event.notification.data.click_action
-    : '/admin';
+    : '/#/admin-portal-xyz';
     
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
