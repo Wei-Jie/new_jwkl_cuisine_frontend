@@ -836,13 +836,13 @@ export default function AdminPortal() {
         });
 
         for (const pName of Object.keys(itemNewCompletedQty)) {
-            const currentProductMenu = menuList.find(m => m.name === pName);
+            const currentProductMenu = menuList.find(m => String(m.name || '').trim() === String(pName || '').trim());
             if (currentProductMenu && currentProductMenu.isStockManaged) {
                 const newCompletedQty = itemNewCompletedQty[pName];
                 if (newCompletedQty > 0) {
                     const allStock = currentProductMenu.stock || 0;
                     const resStock = orderItems.filter(item => {
-                        if (item.productId !== currentProductMenu.productId && item.product_id !== currentProductMenu.productId) return false;
+                        if (String(item.productId || item.product_id || '').trim().toLowerCase() !== String(currentProductMenu.productId || currentProductMenu.product_id || '').trim().toLowerCase()) return false;
                         if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
                         const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                         if (!parent) return false;
@@ -880,18 +880,29 @@ export default function AdminPortal() {
                 }
             };
 
-            await Promise.all(Object.keys(groups).map(status => {
-                return customFetch('/api/v1/orders/items/batch-status', {
+            // 改為順序執行 API 請求，防止並行執行在後端悲觀鎖中產生資料庫死鎖(Deadlock)
+            for (const status of Object.keys(groups)) {
+                const res = await customFetch('/api/v1/orders/items/batch-status', {
                     ...config,
                     body: JSON.stringify({
                         ids: groups[status],
                         status: status
                     })
                 });
-            }));
+                if (!res.ok) {
+                    const errText = await res.text();
+                    let errMsg = '參數無效或可用庫存不足';
+                    try {
+                        const errJson = JSON.parse(errText);
+                        errMsg = errJson.message || errMsg;
+                    } catch (e) {
+                        errMsg = errText || errMsg;
+                    }
+                    throw new Error(errMsg);
+                }
+            }
 
             // 批次儲存成功後，自動檢查有異動的訂單是否可升級主狀態
-            // 1. 收集本次勾選的所有不重複 orderId
             const affectedOrderIds = [...new Set(
                 checkedItemIds.map(id => {
                     const item = schedules.find(s => s.id === id);
@@ -899,7 +910,6 @@ export default function AdminPortal() {
                 }).filter(Boolean)
             )];
 
-            // 2. 模擬最新明細：以舊的 orderItems 為基礎，將勾選的 id 覆蓋為本次新狀態
             const upgraded = await checkAndUpgradeOrderStatus({
                 orderIds: affectedOrderIds,
                 getLatestItems: (orderId) => {
@@ -910,7 +920,6 @@ export default function AdminPortal() {
                         if (!checkedItemIds.includes(oi.id)) return oi;
                         const schedule = schedules.find(s => s.id === oi.id);
                         if (!schedule) return oi;
-                        // 以本次排單管理選擇的狀態覆蓋
                         return { ...oi, itemStatus: schedule.status, item_status: schedule.status };
                     });
                 },
@@ -923,7 +932,7 @@ export default function AdminPortal() {
             fetchOrderItems();
             fetchAllOrders();
         } catch (err) {
-            alert('儲存狀態失敗，請確認網路連線');
+            alert('儲存狀態失敗：' + (err.message || '請確認網路連線'));
         } finally {
             setIsSmiLoading(false);
         }
