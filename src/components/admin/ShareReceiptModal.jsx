@@ -313,7 +313,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
                                 </thead>
                                 <tbody>
                                     {items.map((item, idx) => {
-                                        const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
+                                        const menu = menuList.find(m => (m.productId || m.product_id) === (item.productId || item.product_id));
                                         const pName = item.productId === 'PROD_DISCOUNT' ? '🎁 折扣折抵' : (menu ? menu.name : item.productId);
                                         const isDiscount = item.productId === 'PROD_DISCOUNT';
                                         const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;

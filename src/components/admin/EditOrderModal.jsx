@@ -220,7 +220,7 @@ export default function EditOrderModal({
                                 </thead>
                                 <tbody>
                                     {editingOrderItems.map((item, idx) => {
-                                        const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
+                                        const menu = menuList.find(m => (m.productId || m.product_id) === (item.productId || item.product_id));
                                         const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                         const isWeightItem = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
