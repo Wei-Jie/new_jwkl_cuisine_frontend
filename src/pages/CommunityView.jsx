@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, MessageSquare, Send, Calendar, Tag } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageSquare, Send, Calendar, Tag, Edit3, Trash2 } from 'lucide-react';
 import { customFetch } from '../utils/helpers';
 import './CommunityView.css';
 
@@ -33,6 +33,15 @@ export default function CommunityView() {
     // 留言表單狀態
     const [newComment, setNewComment] = useState({ author: '', content: '' });
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+    // 登入身分與編輯隨筆狀態
+    const isAdmin = !!sessionStorage.getItem('admin_api_key');
+    const [isEditingPost, setIsEditingPost] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [editContent, setEditContent] = useState('');
+    const [editCategory, setEditCategory] = useState('STORY');
+    const [editChapterNum, setEditChapterNum] = useState('');
+    const [isSavingPost, setIsSavingPost] = useState(false);
 
     // 1. 初始化時加載系統參數 (做危機卡控)
     useEffect(() => {
@@ -111,6 +120,7 @@ export default function CommunityView() {
             return;
         }
         setCurrentImgIndex(0); // 每次切換文章時，重設圖片輪播 Index 到第一張
+        setIsEditingPost(false);
 
         const fetchComments = async () => {
             setIsCommentsLoading(true);
@@ -321,6 +331,110 @@ export default function CommunityView() {
             alert("發表留言失敗，請檢查網路連線！");
         } finally {
             setIsSubmittingComment(false);
+        }
+    };
+
+    // 啟動隨筆編輯模式
+    const startEditPost = () => {
+        if (!selectedPost) return;
+        setEditTitle(selectedPost.title || '');
+        setEditContent(selectedPost.content || '');
+        setEditCategory(selectedPost.category || 'STORY');
+        setEditChapterNum(selectedPost.chapterNum !== undefined && selectedPost.chapterNum !== null ? String(selectedPost.chapterNum) : '');
+        setIsEditingPost(true);
+    };
+
+    // 儲存隨筆更新
+    const handleSavePost = async (e) => {
+        e.preventDefault();
+        if (!editTitle.trim()) {
+            alert("請輸入標題！");
+            return;
+        }
+        if (!editContent.trim()) {
+            alert("請輸入內容！");
+            return;
+        }
+
+        setIsSavingPost(true);
+        try {
+            const res = await customFetch(`/api/v1/posts/${selectedPost.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...selectedPost,
+                    title: editTitle.trim(),
+                    content: editContent.trim(),
+                    category: editCategory,
+                    chapterNum: editCategory === 'SERIAL' && editChapterNum.trim() ? Number(editChapterNum) : null
+                })
+            });
+
+            if (res.ok) {
+                const updated = await res.json();
+                
+                // 1. 更新選中的隨筆狀態
+                setSelectedPost(prev => ({
+                    ...prev,
+                    title: updated.title,
+                    content: updated.content,
+                    category: updated.category,
+                    chapterNum: updated.chapterNum
+                }));
+
+                // 2. 更新文章列表
+                setPosts(prev => prev.map(p => p.id === selectedPost.id ? {
+                    ...p,
+                    title: updated.title,
+                    content: updated.content,
+                    category: updated.category,
+                    chapterNum: updated.chapterNum
+                } : p));
+
+                setIsEditingPost(false);
+                alert("隨筆內容更新成功！");
+            } else {
+                let msg = "更新隨筆失敗，請稍後再試！";
+                try {
+                    const errData = await res.json();
+                    msg = errData.message || msg;
+                } catch(e) {}
+                alert(msg);
+            }
+        } catch (err) {
+            console.error("更新隨筆發生錯誤", err);
+            alert("更新隨筆失敗，請檢查網路連線！");
+        } finally {
+            setIsSavingPost(false);
+        }
+    };
+
+    // 刪除留言 (隱藏)
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm("確定要刪除這筆留言嗎？")) {
+            return;
+        }
+
+        try {
+            const res = await customFetch(`/api/v1/comments/${commentId}/status?status=HIDDEN`, {
+                method: 'PUT'
+            });
+
+            if (res.ok) {
+                // 從畫面留言狀態中移除
+                setComments(prev => prev.filter(c => c.id !== commentId));
+                alert("留言已成功刪除！");
+            } else {
+                let msg = "刪除留言失敗，請稍後再試！";
+                try {
+                    const errData = await res.json();
+                    msg = errData.message || msg;
+                } catch(e) {}
+                alert(msg);
+            }
+        } catch (err) {
+            console.error("刪除留言發生錯誤", err);
+            alert("刪除留言失敗，請檢查網路連線！");
         }
     };
 
@@ -653,151 +767,237 @@ export default function CommunityView() {
 
                                 {/* 燈箱右側：內文詳情與留言 */}
                                 <div className="lightbox-right">
-                                    {/* 右側 Header (作者與時間) */}
-                                    <div className="lightbox-header">
-                                        <div className="lightbox-author-info">
-                                            <div className="lightbox-avatar">
-                                                {selectedPost.category === 'SERIAL' ? '✍️' : '👩'}
+                                    {isEditingPost ? (
+                                        <div className="lightbox-edit-panel">
+                                            <div className="lightbox-header">
+                                                <h3 className="lightbox-title">✏️ 編輯隨筆</h3>
                                             </div>
-                                            <div className="lightbox-author-meta">
-                                                <h4>
-                                                    {selectedPost.category === 'STORY' ? '闆娘隨筆' : 
-                                                     selectedPost.category === 'SERIAL' ? '故事連載' : '小灶私廚'}
-                                                </h4>
-                                                <div className="lightbox-meta-row">
-                                                    <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
-                                                    <span className="lightbox-views">👁️ {selectedPost.views || 0} 次瀏覽</span>
+                                            <form onSubmit={handleSavePost} className="lightbox-edit-form">
+                                                <div className="edit-form-group">
+                                                    <label className="edit-form-label">隨筆標題</label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="comment-form-control edit-title-input" 
+                                                        value={editTitle} 
+                                                        onChange={(e) => setEditTitle(e.target.value)} 
+                                                        placeholder="請輸入標題"
+                                                        required 
+                                                    />
+                                                </div>
+                                                <div className="edit-form-group-row">
+                                                    <div className="edit-form-group">
+                                                        <label className="edit-form-label">隨筆分類</label>
+                                                        <select 
+                                                            className="comment-form-control edit-category-select" 
+                                                            value={editCategory} 
+                                                            onChange={(e) => setEditCategory(e.target.value)}
+                                                        >
+                                                            <option value="STORY">日常隨筆</option>
+                                                            <option value="ANNOUNCEMENT">店內公告</option>
+                                                            <option value="EVENT">美味活動</option>
+                                                            <option value="SERIAL">故事連載</option>
+                                                        </select>
+                                                    </div>
+                                                    {editCategory === 'SERIAL' && (
+                                                        <div className="edit-form-group">
+                                                            <label className="edit-form-label">章節編號</label>
+                                                            <input 
+                                                                type="number" 
+                                                                className="comment-form-control edit-chapter-input" 
+                                                                value={editChapterNum} 
+                                                                onChange={(e) => setEditChapterNum(e.target.value)} 
+                                                                placeholder="章節，例如：1"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="edit-form-group">
+                                                    <label className="edit-form-label">內文內容 (支援 Markdown & 插圖標記)</label>
+                                                    <textarea 
+                                                        className="comment-form-control edit-content-textarea" 
+                                                        value={editContent} 
+                                                        onChange={(e) => setEditContent(e.target.value)} 
+                                                        placeholder="請輸入內文內容"
+                                                        required 
+                                                    />
+                                                </div>
+                                                <div className="edit-form-actions">
+                                                    <button type="button" className="edit-btn-cancel" onClick={() => setIsEditingPost(false)} disabled={isSavingPost}>
+                                                        取消
+                                                    </button>
+                                                    <button type="submit" className="edit-btn-submit" disabled={isSavingPost}>
+                                                        {isSavingPost ? "儲存中..." : "儲存變更"}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* 右側 Header (作者與時間) */}
+                                            <div className="lightbox-header">
+                                                <div className="lightbox-header-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div className="lightbox-author-info">
+                                                        <div className="lightbox-avatar">
+                                                            {selectedPost.category === 'SERIAL' ? '✍️' : '👩'}
+                                                        </div>
+                                                        <div className="lightbox-author-meta">
+                                                            <h4>
+                                                                {selectedPost.category === 'STORY' ? '闆娘隨筆' : 
+                                                                 selectedPost.category === 'SERIAL' ? '故事連載' : '小灶私廚'}
+                                                            </h4>
+                                                            <div className="lightbox-meta-row">
+                                                                <span>發布於 {formatDateTime(selectedPost.createdAt)}</span>
+                                                                <span className="lightbox-views">👁️ {selectedPost.views || 0} 次瀏覽</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {isAdmin && (
+                                                        <button className="edit-post-trigger-btn" onClick={startEditPost} title="編輯隨筆內容">
+                                                            <Edit3 size={14} />
+                                                            <span>編輯隨筆</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {selectedPost.title && (
+                                                    <h3 className="lightbox-title">
+                                                        {selectedPost.category === 'SERIAL' && `第 ${selectedPost.chapterNum} 章：`}
+                                                        {selectedPost.title}
+                                                    </h3>
+                                                )}
+                                            </div>
+
+                                            {/* 右側 Body (內文滾動與留言) */}
+                                            <div className="lightbox-body-scroll">
+                                                {/* 文章完整內文 (支援內文 Markdown 插圖) */}
+                                                <div className="lightbox-post-content">
+                                                    {renderContentWithImages(selectedPost.content)}
+                                                </div>
+
+                                                {/* 故事連載專屬的章節導航 */}
+                                                {selectedPost.category === 'SERIAL' && (
+                                                    <div className="serial-navigation">
+                                                        <button 
+                                                            className="serial-nav-btn"
+                                                            onClick={handlePrevPost}
+                                                            disabled={!hasPrev}
+                                                        >
+                                                            👈 上一章
+                                                        </button>
+                                                        <button 
+                                                            className="serial-nav-btn"
+                                                            onClick={handleNextPost}
+                                                            disabled={!hasNext}
+                                                        >
+                                                            下一章 👉
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* SNS 一鍵分享按鈕列 */}
+                                                <div className="sns-share-bar">
+                                                    <span className="sns-share-label">分享這篇動態：</span>
+                                                    <div className="sns-share-buttons">
+                                                        <button className={`sns-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink} title="複製專屬連結">
+                                                            {copied ? '✅ 已複製連結！' : '🔗 複製連結'}
+                                                        </button>
+                                                        <button className="sns-btn line" onClick={handleShareToLine} title="分享至 LINE">
+                                                            🟢 LINE 分享
+                                                        </button>
+                                                        <button className="sns-btn fb" onClick={handleShareToFb} title="分享至 Facebook">
+                                                            🔵 FB 分享
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* 留言系統區塊 */}
+                                                <div className="comments-section">
+                                                    <div className="comments-section-title">
+                                                        <MessageSquare size={16} />
+                                                        <span>留言交流 ({comments.length})</span>
+                                                    </div>
+
+                                                    {isCommentsLoading ? (
+                                                        <div style={{ textAlign: 'center', padding: '16px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                                                            載入留言中...
+                                                        </div>
+                                                    ) : comments.length === 0 ? (
+                                                        <div className="no-comments">
+                                                            目前尚無留言。留下一句溫暖的話吧！
+                                                        </div>
+                                                    ) : (
+                                                        <div className="comment-list">
+                                                            {comments.map(comment => (
+                                                                <div key={comment.id} className="comment-item">
+                                                                    <div className="comment-meta">
+                                                                        <div className="comment-meta-left">
+                                                                            <span className="comment-author">{comment.author}</span>
+                                                                            <span className="comment-time">{formatDateTime(comment.createdAt)}</span>
+                                                                        </div>
+                                                                        {isAdmin && (
+                                                                            <button 
+                                                                                className="comment-delete-btn" 
+                                                                                onClick={() => handleDeleteComment(comment.id)} 
+                                                                                title="刪除此留言"
+                                                                            >
+                                                                                <Trash2 size={13} />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="comment-content">{comment.content}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
-                                        {selectedPost.title && (
-                                            <h3 className="lightbox-title">
-                                                {selectedPost.category === 'SERIAL' && `第 ${selectedPost.chapterNum} 章：`}
-                                                {selectedPost.title}
-                                            </h3>
-                                        )}
-                                    </div>
 
-                                    {/* 右側 Body (內文滾動與留言) */}
-                                    <div className="lightbox-body-scroll">
-                                        {/* 文章完整內文 (支援內文 Markdown 插圖) */}
-                                        <div className="lightbox-post-content">
-                                            {renderContentWithImages(selectedPost.content)}
-                                        </div>
-
-                                        {/* 故事連載專屬的章節導航 */}
-                                        {selectedPost.category === 'SERIAL' && (
-                                            <div className="serial-navigation">
-                                                <button 
-                                                    className="serial-nav-btn"
-                                                    onClick={handlePrevPost}
-                                                    disabled={!hasPrev}
-                                                >
-                                                    👈 上一章
-                                                </button>
-                                                <button 
-                                                    className="serial-nav-btn"
-                                                    onClick={handleNextPost}
-                                                    disabled={!hasNext}
-                                                >
-                                                    下一章 👉
-                                                </button>
-                                            </div>
-                                        )}
-
-                                     {/* SNS 一鍵分享按鈕列 */}
-                                     <div className="sns-share-bar">
-                                         <span className="sns-share-label">分享這篇動態：</span>
-                                         <div className="sns-share-buttons">
-                                             <button className={`sns-btn copy ${copied ? 'copied' : ''}`} onClick={handleCopyLink} title="複製專屬連結">
-                                                 {copied ? '✅ 已複製連結！' : '🔗 複製連結'}
-                                             </button>
-                                             <button className="sns-btn line" onClick={handleShareToLine} title="分享至 LINE">
-                                                 🟢 LINE 分享
-                                             </button>
-                                             <button className="sns-btn fb" onClick={handleShareToFb} title="分享至 Facebook">
-                                                 🔵 FB 分享
-                                             </button>
-                                         </div>
-                                     </div>
-
-                                    {/* 留言系統區塊 */}
-                                    <div className="comments-section">
-                                        <div className="comments-section-title">
-                                            <MessageSquare size={16} />
-                                            <span>留言交流 ({comments.length})</span>
-                                        </div>
-
-                                        {isCommentsLoading ? (
-                                            <div style={{ textAlign: 'center', padding: '16px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-                                                載入留言中...
-                                            </div>
-                                        ) : comments.length === 0 ? (
-                                            <div className="no-comments">
-                                                目前尚無留言。留下一句溫暖的話吧！
-                                            </div>
-                                        ) : (
-                                            <div className="comment-list">
-                                                {comments.map(comment => (
-                                                    <div key={comment.id} className="comment-item">
-                                                        <div className="comment-meta">
-                                                            <span className="comment-author">{comment.author}</span>
-                                                            <span className="comment-time">{formatDateTime(comment.createdAt)}</span>
+                                            {/* 右側 Footer (留言表單) */}
+                                            <div className="comment-form-panel">
+                                                {configs.ENABLE_COMMUNITY_COMMENTS ? (
+                                                    <form className="comment-form" onSubmit={handleCommentSubmit}>
+                                                        <div className="comment-form-inputs">
+                                                            <input
+                                                                type="text"
+                                                                className="comment-form-control comment-input-author"
+                                                                placeholder="您的暱稱"
+                                                                value={newComment.author}
+                                                                onChange={(e) => setNewComment(prev => ({ ...prev, author: e.target.value }))}
+                                                                maxLength={15}
+                                                                required
+                                                                disabled={isSubmittingComment}
+                                                            />
+                                                            <textarea
+                                                                className="comment-form-control comment-textarea"
+                                                                placeholder="寫下您的留言..."
+                                                                value={newComment.content}
+                                                                onChange={(e) => setNewComment(prev => ({ ...prev, content: e.target.value }))}
+                                                                maxLength={200}
+                                                                required
+                                                                disabled={isSubmittingComment}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                                                                        handleCommentSubmit(e);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <button 
+                                                                type="submit" 
+                                                                className="comment-submit-btn"
+                                                                disabled={isSubmittingComment}
+                                                            >
+                                                                <Send size={14} />
+                                                            </button>
                                                         </div>
-                                                        <div className="comment-content">{comment.content}</div>
+                                                    </form>
+                                                ) : (
+                                                    <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--color-danger)', backgroundColor: 'var(--color-danger-light)', padding: '10px', borderRadius: '8px', fontWeight: '700' }}>
+                                                        ⚠️ 留言功能維護中，目前暫不開放發表新留言！
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* 右側 Footer (留言表單) */}
-                                <div className="comment-form-panel">
-                                    {configs.ENABLE_COMMUNITY_COMMENTS ? (
-                                        <form className="comment-form" onSubmit={handleCommentSubmit}>
-                                            <div className="comment-form-inputs">
-                                                <input
-                                                    type="text"
-                                                    className="comment-form-control comment-input-author"
-                                                    placeholder="您的暱稱"
-                                                    value={newComment.author}
-                                                    onChange={(e) => setNewComment(prev => ({ ...prev, author: e.target.value }))}
-                                                    maxLength={15}
-                                                    required
-                                                    disabled={isSubmittingComment}
-                                                />
-                                                <textarea
-                                                    className="comment-form-control comment-textarea"
-                                                    placeholder="寫下您的留言..."
-                                                    value={newComment.content}
-                                                    onChange={(e) => setNewComment(prev => ({ ...prev, content: e.target.value }))}
-                                                    maxLength={200}
-                                                    required
-                                                    disabled={isSubmittingComment}
-                                                    onKeyDown={(e) => {
-                                                        // 支援 Ctrl+Enter 或 Command+Enter 送出留言
-                                                        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                                                            handleCommentSubmit(e);
-                                                        }
-                                                    }}
-                                                />
-                                                <button 
-                                                    type="submit" 
-                                                    className="comment-submit-btn"
-                                                    disabled={isSubmittingComment}
-                                                >
-                                                    <Send size={14} />
-                                                </button>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <div style={{ textAlign: 'center', fontSize: '13px', color: 'var(--color-danger)', backgroundColor: 'var(--color-danger-light)', padding: '10px', borderRadius: '8px', fontWeight: '700' }}>
-                                            ⚠️ 留言功能維護中，目前暫不開放發表新留言！
-                                        </div>
+                                        </>
                                     )}
                                 </div>
-                            </div>
                         </div>
                     </div>
                 )}

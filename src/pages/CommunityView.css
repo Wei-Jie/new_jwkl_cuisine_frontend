@@ -1115,3 +1115,177 @@
   margin-top: 4px;
 }
 
+/* ==========================================
+   7. 店主管理 UI 專屬樣式 (編輯隨筆與刪除留言)
+   ========================================== */
+
+/* 編輯隨筆觸發按鈕 */
+.edit-post-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid #d97706;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-post-trigger-btn:hover {
+  background-color: #d97706;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(217, 119, 6, 0.15);
+}
+
+/* 刪除留言按鈕 */
+.comment-delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  opacity: 0.6;
+}
+
+.comment-delete-btn:hover {
+  background-color: #fee2e2;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* 確保留言 metadata 可以容納刪除按鈕 */
+.comment-meta {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100%;
+}
+
+.comment-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 編輯隨筆面板 */
+.lightbox-edit-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.lightbox-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-grow: 1;
+  margin-top: 16px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.edit-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-form-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.edit-form-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.edit-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.edit-category-select,
+.edit-chapter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+}
+
+.edit-content-textarea {
+  width: 100%;
+  height: 180px;
+  min-height: 120px;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.6;
+  font-family: inherit;
+  padding: 12px;
+}
+
+.edit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.edit-btn-cancel {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-btn-cancel:hover:not(:disabled) {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.edit-btn-submit {
+  background-color: #d97706;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-btn-submit:hover:not(:disabled) {
+  background-color: #b45309;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
+
+.edit-btn-submit:disabled,
+.edit-btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
