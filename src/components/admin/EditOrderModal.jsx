@@ -220,7 +220,7 @@ export default function EditOrderModal({
                                 </thead>
                                 <tbody>
                                     {editingOrderItems.map((item, idx) => {
-                                        const menu = menuList.find(m => (m.productId || m.product_id) === (item.productId || item.product_id));
+                                        const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
                                         const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                         const isWeightItem = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
@@ -230,7 +230,7 @@ export default function EditOrderModal({
                                                     {isDiscount ? (
                                                         <strong style={{ color: 'var(--color-success)' }}>🎁 折扣折抵</strong>
                                                     ) : (
-                                                        <span>{menu?.name || item.productId}</span>
+                                                        <span>{menu?.name || item.productId || item.product_id}</span>
                                                     )}
                                                 </td>
                                                 <td data-label="單價 / 重量(g)">

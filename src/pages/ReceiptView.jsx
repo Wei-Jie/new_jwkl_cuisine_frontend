@@ -158,20 +158,20 @@ export default function ReceiptView() {
                             </tr>
                         </thead>
                         <tbody>
-                            {details.map((item, idx) => {
-                                const menu = menuList.find(m => {
-                                    const mId = m.productId || m.product_id;
-                                    const iId = item.productId || item.product_id;
-                                    return mId && iId && mId === iId;
-                                });
-                                const pName = item.productId === 'PROD_DISCOUNT' ? '🎁 折扣折抵' : (menu ? menu.name : item.productId);
-                                const isDiscount = item.productId === 'PROD_DISCOUNT';
-                                const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
+                             {details.map((item, idx) => {
+                                 const menu = menuList.find(m => {
+                                     const mId = m.productId || m.product_id || '';
+                                     const iId = item.productId || item.product_id || '';
+                                     return mId && iId && mId.toString().trim().toLowerCase() === iId.toString().trim().toLowerCase();
+                                 });
+                                 const pName = (item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT') ? '🎁 折扣折抵' : (menu ? menu.name : (item.productId || item.product_id));
+                                 const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
+                                 const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
-                                return (
-                                    <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                                        <td style={{ padding: '12px 8px', color: isDiscount ? '#16a34a' : '#1f2937', fontWeight: isDiscount ? 'bold' : 'normal' }}>
-                                            {pName}
+                                 return (
+                                     <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                                         <td style={{ padding: '12px 8px', color: isDiscount ? '#16a34a' : '#1f2937', fontWeight: isDiscount ? 'bold' : 'normal' }}>
+                                             {pName}
                                         </td>
                                         <td style={{ padding: '12px 8px', textAlign: 'right', color: '#6b7280' }}>
                                             {isDiscount ? '-' : (isWeight ? `${item.productAmt} g` : `$${item.productAmt}`)}

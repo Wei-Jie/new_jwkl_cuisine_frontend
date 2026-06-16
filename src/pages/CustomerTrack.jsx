@@ -161,7 +161,7 @@ export default function CustomerTrack() {
                                         </thead>
                                         <tbody>
                                             {searchResult.details.map((item, idx) => {
-                                                const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
+                                                const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
                                                 const priceStr = menu?.price || '';
                                                 const isWeight = priceStr.includes('*') || priceStr.includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id);
                                                 const qtyDisplay = `${item.qty} 個`;
@@ -174,7 +174,7 @@ export default function CustomerTrack() {
                                                 return (
                                                     <tr key={idx} style={{ borderBottom: '1px dashed #f2eee6' }}>
                                                         <td style={{ padding: '8px 0', color: '#2d2a26' }}>
-                                                            {menu?.name || item.productId}
+                                                            {menu?.name || item.productId || item.product_id}
                                                             {isWeight && item.productAmt > 0 && (
                                                                 <span style={{ fontSize: '11px', color: '#8c857b', marginLeft: '6px' }}>
                                                                     ({item.productAmt}g)

@@ -401,7 +401,7 @@ export default function AdminPortal() {
             const items = sourceItems.filter(item => item.orderId === order.order_id || item.order_id === order.order_id);
             return items.map(item => {
                 const copy = { ...item };
-                const menu = menuList.find(m => m.product_id === copy.productId || m.product_id === copy.product_id);
+                const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(copy.productId || copy.product_id || '').trim().toLowerCase());
                 const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(copy.productId || copy.product_id)) : false;
                 if (isWeight && copy.qty > 5 && (!copy.productAmt || parseFloat(copy.productAmt) <= 10)) {
                     const oldQty = copy.qty;
@@ -443,7 +443,7 @@ export default function AdminPortal() {
     const handleItemAmtChange = (index, newAmt) => {
         const updated = [...editingOrderItems];
         let val = parseFloat(newAmt) || 0;
-        const menu = menuList.find(m => m.product_id === updated[index].productId || m.product_id === updated[index].product_id);
+        const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(updated[index].productId || updated[index].product_id || '').trim().toLowerCase());
         const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(updated[index].productId || updated[index].product_id)) : false;
         
         if (isWeight && val < 0) val = 0;
@@ -462,16 +462,16 @@ export default function AdminPortal() {
 
     const handleItemQtyChange = (index, newQty) => {
         const updated = [...editingOrderItems];
-        const qtyVal = parseInt(newQty) || 1;
-        updated[index].qty = qtyVal;
-        const menu = menuList.find(m => m.product_id === updated[index].productId || m.product_id === updated[index].product_id);
+        const val = parseInt(newQty) || 1;
+        updated[index].qty = val;
+        const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(updated[index].productId || updated[index].product_id || '').trim().toLowerCase());
         const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量')) : false;
         
         if (isWeight) {
             const rate = getWeightRate(menu.price);
-            updated[index].productTotalAmt = Math.round(qtyVal * (updated[index].productAmt || 0) * rate);
+            updated[index].productTotalAmt = Math.round(val * (updated[index].productAmt || 0) * rate);
         } else {
-            updated[index].productTotalAmt = qtyVal * (updated[index].productAmt || 0);
+            updated[index].productTotalAmt = val * (updated[index].productAmt || 0);
         }
         setEditingOrderItems(updated);
         const sum = updated.reduce((acc, curr) => acc + (parseFloat(curr.productTotalAmt) || 0), 0);
@@ -560,11 +560,11 @@ export default function AdminPortal() {
             for (const pId of Object.keys(itemDiffMap)) {
                 const diff = itemDiffMap[pId];
                 if (diff > 0) {
-                    const menu = menuList.find(m => m.productId === pId || m.product_id === pId);
+                    const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(pId || '').trim().toLowerCase());
                     if (menu && menu.isStockManaged) {
                         const allStock = menu.stock || 0;
                         const resStock = orderItems.filter(item => {
-                            if (item.productId !== menu.productId && item.product_id !== menu.productId) return false;
+                            if (String(item.productId || item.product_id || '').trim().toLowerCase() !== String(menu.productId || menu.product_id || '').trim().toLowerCase()) return false;
                             if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
                             const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                             if (!parent) return false;
@@ -1174,8 +1174,8 @@ export default function AdminPortal() {
                 const dateVal = analyticsDateBasis === 'payment_date' ? parent.payment_date : parent.order_date;
                 const oDate = parseDate(dateVal);
                 if (oDate >= start && oDate <= end) {
-                    const menu = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id);
-                    const pName = menu?.name || item.productId;
+                    const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
+                    const pName = menu?.name || item.productId || item.product_id;
                     
                     if (!productStats[pName]) {
                         productStats[pName] = { qty: 0, revenue: 0, profit: 0 };
@@ -1224,7 +1224,7 @@ export default function AdminPortal() {
                 const dateVal = analyticsDateBasis === 'payment_date' ? parent.payment_date : parent.order_date;
                 const oDate = parseDate(dateVal);
                 if (oDate >= start && oDate <= end) {
-                    const cat = menuList.find(m => m.product_id === item.productId || m.product_id === item.product_id)?.category || '其他';
+                    const cat = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase())?.category || '其他';
                     categoryRevenueMap[cat] = (categoryRevenueMap[cat] || 0) + (parseFloat(item.productTotalAmt) || 0);
                 }
             }
