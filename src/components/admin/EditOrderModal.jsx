@@ -158,7 +158,7 @@ export default function EditOrderModal({
                                 onChange={(e) => {
                                     const val = e.target.value;
                                     setEditingOrder({ ...editingOrder, status: val });
-                                    if (val === '已出貨' || val === '已結單') {
+                                    if (val === '已完成' || val === '已出貨' || val === '已結單') {
                                         setEditingOrderItems(prev => prev.map(item => {
                                             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                             if (isDiscount) return item;
