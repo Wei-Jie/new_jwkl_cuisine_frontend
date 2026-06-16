@@ -146,6 +146,18 @@ export default function AdminPortal() {
     const [checkedItemIds, setCheckedItemIds] = useState([]);
     const [isSmiLoading, setIsSmiLoading] = useState(false);
 
+    // 當 URL Query 參數中有 tab 時，自動選取對應的分頁 (供 Web Push 推播通知直達留言管理等分頁使用)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam) {
+            const validTabs = ['orders', 'schedules', 'menu', 'expenses', 'analytics', 'inventory', 'configs', 'community'];
+            if (validTabs.includes(tabParam)) {
+                setActiveTab(tabParam);
+            }
+        }
+    }, []);
+
     // ==========================================
     // API 查詢與加載方法
     // ==========================================
