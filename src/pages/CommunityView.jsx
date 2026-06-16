@@ -300,8 +300,8 @@ export default function CommunityView() {
                     ...data,
                     author: data.nickName || data.nick_name || data.author || '匿名顧客',
                     content: data.commentText || data.comment_text || data.content || '',
-                    createdAt: data.createdAt || data.created_at,
-                    created_at: data.createdAt || data.created_at
+                    createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+                    created_at: data.createdAt || data.created_at || new Date().toISOString()
                 };
                 setComments(prev => [...prev, normalized]);
                 setNewComment(prev => ({ ...prev, content: '' })); // 清空內容，保留作者名字方便下一次留言
