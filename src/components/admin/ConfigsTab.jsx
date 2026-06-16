@@ -100,6 +100,103 @@ const ConfigsTab = ({
     handleSaveFaq
 }) => {
     const [isUploading, setIsUploading] = useState(false);
+    const [pushStatus, setPushStatus] = useState('checking'); // checking, unsupported, denied, prompt, subscribed
+
+    React.useEffect(() => {
+        checkPushSubscription();
+    }, []);
+
+    const checkPushSubscription = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            setPushStatus('unsupported');
+            return;
+        }
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+            if (subscription) {
+                setPushStatus('subscribed');
+            } else {
+                const permission = Notification.permission;
+                if (permission === 'denied') {
+                    setPushStatus('denied');
+                } else {
+                    setPushStatus('prompt');
+                }
+            }
+        } catch (err) {
+            console.error("檢查推播狀態出錯", err);
+            setPushStatus('unsupported');
+        }
+    };
+
+    const handleSubscribePush = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            alert("您的瀏覽器不支援 Web Push 通知！");
+            return;
+        }
+        
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert("您拒絕了通知權限，無法開啟即時通知。請在瀏覽器設定中允許此網站發送通知。");
+                setPushStatus('denied');
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.ready;
+
+            const keyRes = await customFetch('/api/v1/system-configs/web-push/public-key');
+            if (!keyRes.ok) {
+                throw new Error("無法取得 Web Push 公鑰");
+            }
+            const { publicKey } = await keyRes.json();
+            if (!publicKey) {
+                throw new Error("Web Push 公鑰為空，請確認後端金鑰是否已初始化");
+            }
+
+            const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            });
+
+            const saveRes = await customFetch('/api/v1/system-configs/web-push/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            if (saveRes.ok) {
+                alert("即時留言通知開啟成功！當有顧客在灶下動態留言時，此瀏覽器將收到即時通知。");
+                setPushStatus('subscribed');
+            } else {
+                throw new Error("儲存訂閱資訊失敗");
+            }
+        } catch (err) {
+            console.error("訂閱推播失敗", err);
+            alert("開啟即時通知失敗: " + err.message);
+        }
+    };
+
+    const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
@@ -252,6 +349,51 @@ const ConfigsTab = ({
                             </table>
                         </div>
                     )}
+                </div>
+
+                {/* 店主即時留言通知設定 */}
+                <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <h3 className="section-title" style={{ borderLeft: 'none', paddingLeft: 0, margin: 0 }}>🔔 即時留言推播通知（店主專用）</h3>
+                    <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                        啟用此功能後，當有顧客在「灶下動態」發表新留言時，您的瀏覽器會立即彈出通知（即使您已關閉此網頁）。
+                    </p>
+                    
+                    <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'var(--color-background-hover)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 'bold' }}>推播通知狀態：</span>
+                            <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                                {pushStatus === 'checking' && '⏳ 檢查中...'}
+                                {pushStatus === 'unsupported' && '❌ 瀏覽器不支援'}
+                                {pushStatus === 'denied' && '🔴 已封鎖通知權限'}
+                                {pushStatus === 'prompt' && '🟡 尚未開啟'}
+                                {pushStatus === 'subscribed' && '🟢 已開啟即時通知'}
+                            </span>
+                        </div>
+                        {pushStatus === 'denied' && (
+                            <small style={{ color: 'var(--color-danger, #dc2626)', fontSize: '11px' }}>
+                                💡 請點擊瀏覽器網址列旁的鎖頭，將「通知」權限改為「允許」，並重新整理頁面。
+                             </small>
+                        )}
+                    </div>
+
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={handleSubscribePush}
+                        disabled={pushStatus === 'unsupported' || pushStatus === 'subscribed'}
+                        style={{ 
+                            width: '100%', 
+                            backgroundColor: pushStatus === 'subscribed' ? '#10b981' : 'var(--color-primary)',
+                            opacity: pushStatus === 'unsupported' ? 0.6 : 1,
+                            cursor: (pushStatus === 'unsupported' || pushStatus === 'subscribed') ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        {pushStatus === 'subscribed' ? '✓ 已成功訂閱此裝置' : '🔔 開啟此裝置即時通知'}
+                    </button>
+                    
+                    <small style={{ fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: '1.4' }}>
+                        * 請使用您平時用來管理後台的裝置（如手機或電腦瀏覽器）開啟此設定。<br />
+                        * 如果您使用多個裝置管理，請在各裝置的瀏覽器上分別點擊一次開啟。
+                    </small>
                 </div>
             </div>
 
