@@ -384,7 +384,7 @@ export default function App() {
                                     e.currentTarget.style.backgroundColor = '#06C755';
                                 }}
                             >
-                                加 LINE 傳送訂單編號
+                                加 LINE 追蹤進度
                             </a>
                             <div style={{
                                 fontSize: '11px',
