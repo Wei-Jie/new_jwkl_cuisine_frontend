@@ -41,14 +41,6 @@ export const customFetch = (url, options = {}) => {
     if (method === 'GET' && targetUrl) {
         const separator = targetUrl.includes('?') ? '&' : '?';
         targetUrl = `${targetUrl}${separator}_t=${Date.now()}`;
-        
-        // 加上防快取 Headers
-        options.headers = {
-            ...options.headers,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-        };
     }
     
     // 如果本地有暫存的管理金鑰，自動帶入 Headers
