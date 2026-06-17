@@ -59,6 +59,7 @@ export default function App() {
     const [toasts, setToasts] = useState([]);
     const [orderSuccessData, setOrderSuccessData] = useState(null); // 控制送單成功彈窗狀態
     const [dialogConfig, setDialogConfig] = useState(null); // 控制全域自訂提示與確認彈窗狀態
+    const [lineLink, setLineLink] = useState('https://line.me/ti/p/~@072qcqvn'); // 預設使用官方帳號
 
     useEffect(() => {
         window.sweetAlert = (message, title = '系統提示') => {
@@ -77,6 +78,25 @@ export default function App() {
         window.alert = (message) => {
             window.sweetAlert(message);
         };
+    }, []);
+
+    // 載入系統設定中的 LINE 連結配置
+    useEffect(() => {
+        const fetchLineConfig = async () => {
+            try {
+                const res = await customFetch('/api/v1/system-configs');
+                if (res.ok) {
+                    const data = await res.json();
+                    const line = data.find(c => c.configKey === 'LINE_LINK');
+                    if (line && line.configValue) {
+                        setLineLink(line.configValue);
+                    }
+                }
+            } catch (e) {
+                console.error("載入 LINE 連結設定失敗，使用預設值", e);
+            }
+        };
+        fetchLineConfig();
     }, []);
 
     const showToast = (msg, type = 'success') => {
@@ -310,6 +330,70 @@ export default function App() {
                             >
                                 📋 複製訂單編號
                             </button>
+                        </div>
+
+                        {/* LINE 客服引導區塊 */}
+                        <div style={{
+                            backgroundColor: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '10px',
+                            padding: '16px',
+                            marginBottom: '20px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{
+                                fontSize: '13px',
+                                fontWeight: '700',
+                                color: '#166534',
+                                marginBottom: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px'
+                            }}>
+                                💬 貼心提示：加入官方 LINE 享專人對帳
+                            </div>
+                            <a
+                                href={lineLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    backgroundColor: '#06C755',
+                                    color: '#ffffff',
+                                    padding: '10px 18px',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    borderRadius: '24px',
+                                    textDecoration: 'none',
+                                    width: '100%',
+                                    boxShadow: '0 2px 6px rgba(6, 199, 85, 0.2)',
+                                    transition: 'all 0.2s ease',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'scale(1.02)';
+                                    e.currentTarget.style.backgroundColor = '#05b04b';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.backgroundColor = '#06C755';
+                                }}
+                            >
+                                加 LINE 傳送訂單編號
+                            </a>
+                            <div style={{
+                                fontSize: '11px',
+                                color: '#166534',
+                                marginTop: '8px',
+                                lineHeight: '1.4'
+                            }}>
+                                加入後<strong>請主動傳送「您的訂單編號」</strong>，<br/>老闆會立即為您對帳並開始排單準備！
+                            </div>
                         </div>
                         
                         <p style={{

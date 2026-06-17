@@ -8,6 +8,7 @@ export default function ReceiptView() {
     const [error, setError] = useState(null);
     const [data, setData] = useState(null);
     const [menuList, setMenuList] = useState([]);
+    const [lineLink, setLineLink] = useState('https://line.me/ti/p/~@072qcqvn'); // 預設使用官方帳號
 
     // 取得資料
     useEffect(() => {
@@ -22,6 +23,20 @@ export default function ReceiptView() {
                         product_id: m.productId || m.product_id
                     }));
                     setMenuList(normalized);
+                }
+
+                // 1.5 獲取 LINE 官方帳號設定
+                try {
+                    const lineRes = await customFetch('/api/v1/system-configs');
+                    if (lineRes.ok) {
+                        const configs = await lineRes.json();
+                        const line = configs.find(c => c.configKey === 'LINE_LINK');
+                        if (line && line.configValue) {
+                            setLineLink(line.configValue);
+                        }
+                    }
+                } catch (e) {
+                    console.error("無法獲取 LINE 連結設定", e);
                 }
 
                 // 2. 獲取去識別化後的公開安全對帳單資料
@@ -208,12 +223,41 @@ export default function ReceiptView() {
                 </div>
             </div>
 
+            {/* LINE 導引對帳提示 */}
+            <div style={{ 
+                maxWidth: '600px', 
+                width: '100%', 
+                backgroundColor: '#ffffff', 
+                borderRadius: '16px', 
+                padding: '16px 20px', 
+                border: '1px solid #ece6dc',
+                textAlign: 'center',
+                marginBottom: '16px',
+                boxSizing: 'border-box'
+            }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#166534', fontWeight: 'bold' }}>
+                    💡 貼心提醒
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', color: '#4b5563', lineHeight: '1.6' }}>
+                    對帳單如有品項調整需求，或想即時詢問出餐進度，請點擊下方 <strong>「聯絡 LINE 客服」</strong> 並主動提供您的訂單編號 <strong style={{ color: '#b45309' }}>{order.orderId}</strong>，我們將有專人立即為您處理！
+                </p>
+            </div>
+
             {/* 快速聯絡按鈕群 */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '600px', width: '100%' }}>
-                <a href="https://line.me/ti/p/~@072qcqvn" target="_blank" rel="noreferrer" style={{ 
+                <a href={lineLink} target="_blank" rel="noreferrer" style={{ 
                     display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#06c755', color: '#ffffff', 
-                    padding: '10px 20px', borderRadius: '24px', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.08)'
+                    padding: '10px 24px', borderRadius: '24px', textDecoration: 'none', fontSize: '14px', fontWeight: 'bold',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.08)',
+                    transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.backgroundColor = '#05b04b';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.backgroundColor = '#06c755';
                 }}>
                     💬 聯絡 LINE 客服
                 </a>

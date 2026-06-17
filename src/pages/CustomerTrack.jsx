@@ -9,6 +9,26 @@ export default function CustomerTrack() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [menuList, setMenuList] = useState([]);
+    const [lineLink, setLineLink] = useState('https://line.me/ti/p/~@072qcqvn'); // 預設使用官方帳號
+
+    // 載入系統設定中的 LINE 連結配置
+    useEffect(() => {
+        const fetchLineConfig = async () => {
+            try {
+                const res = await customFetch('/api/v1/system-configs');
+                if (res.ok) {
+                    const data = await res.json();
+                    const line = data.find(c => c.configKey === 'LINE_LINK');
+                    if (line && line.configValue) {
+                        setLineLink(line.configValue);
+                    }
+                }
+            } catch (e) {
+                console.error("載入 LINE 連結設定失敗，使用預設值", e);
+            }
+        };
+        fetchLineConfig();
+    }, []);
 
     // 載入商品列表以供明細比對名稱與秤重判斷
     useEffect(() => {
@@ -200,6 +220,49 @@ export default function CustomerTrack() {
                                     </table>
                                 </div>
                             )}
+
+                            {/* 💡 訂單有疑問？加 LINE 諮詢 */}
+                            <div style={{
+                                marginTop: '20px',
+                                borderTop: '1px dashed var(--color-border)',
+                                paddingTop: '16px',
+                                textAlign: 'center'
+                            }}>
+                                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                                    💡 <strong>有任何問題？</strong>如需修改取貨日期或詢問出餐進度，歡迎加入官方 LINE，並提供您的訂單編號，將有專人立刻為您服務。
+                                </p>
+                                <a 
+                                    href={lineLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    style={{
+                                        display: 'inline-flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        gap: '6px',
+                                        backgroundColor: '#06C755', 
+                                        color: '#ffffff', 
+                                        padding: '8px 16px', 
+                                        fontSize: '13px', 
+                                        fontWeight: '700', 
+                                        borderRadius: '20px', 
+                                        textDecoration: 'none',
+                                        boxShadow: '0 2px 6px rgba(6, 199, 85, 0.15)',
+                                        transition: 'all 0.2s ease',
+                                        marginTop: '4px'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.02)';
+                                        e.currentTarget.style.backgroundColor = '#05b04b';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.backgroundColor = '#06C755';
+                                    }}
+                                >
+                                    💬 聯絡 LINE 客服
+                                </a>
+                            </div>
                         </div>
                     </div>
                 )}
