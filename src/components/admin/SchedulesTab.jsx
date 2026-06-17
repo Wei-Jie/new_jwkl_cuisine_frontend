@@ -244,8 +244,8 @@ export default function SchedulesTab({
                                 
                                 const itemPendingQty = orderItems.filter(item => {
                                     if ((item.itemStatus || item.item_status) !== '待製作') return false;
-                                    const m2 = menuList.find(ml => ml.product_id === (item.productId || item.product_id));
-                                    if (!m2 || m2.name !== pName) return false;
+                                    const itemProductName = item.productName || item.product_name || '';
+                                    if (itemProductName.trim().toLowerCase() !== pName.trim().toLowerCase()) return false;
 
                                     // 關聯母訂單狀態排除無效訂單 (Bug 修復，只計算已接單訂單)
                                     const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);

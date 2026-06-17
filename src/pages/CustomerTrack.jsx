@@ -174,7 +174,7 @@ export default function CustomerTrack() {
                                                 return (
                                                     <tr key={idx} style={{ borderBottom: '1px dashed #f2eee6' }}>
                                                         <td style={{ padding: '8px 0', color: '#2d2a26' }}>
-                                                            {getProductName(item.productId || item.product_id, menuList)}
+                                                            {item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList)}
                                                             {isWeight && item.productAmt > 0 && (
                                                                 <span style={{ fontSize: '11px', color: '#8c857b', marginLeft: '6px' }}>
                                                                     ({item.productAmt}g)

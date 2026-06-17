@@ -231,7 +231,7 @@ export default function EditOrderModal({
                                                     {isDiscount ? (
                                                         <strong style={{ color: 'var(--color-success)' }}>🎁 折扣折抵</strong>
                                                     ) : (
-                                                        <span>{getProductName(item.productId || item.product_id, menuList)}</span>
+                                                        <span>{item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList)}</span>
                                                     )}
                                                 </td>
                                                 <td data-label="單價 / 重量(g)">

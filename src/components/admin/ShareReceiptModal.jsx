@@ -34,7 +34,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
 
         items.forEach(item => {
             const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
-            const pName = getProductName(item.productId || item.product_id, menuList);
+            const pName = item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList);
             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
             
             if (isDiscount) {
@@ -156,7 +156,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
 
         items.forEach((item, index) => {
             const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
-            const pName = getProductName(item.productId || item.product_id, menuList);
+            const pName = item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList);
             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
             const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
@@ -307,7 +307,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
                                 <tbody>
                                     {items.map((item, idx) => {
                                         const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
-                                        const pName = getProductName(item.productId || item.product_id, menuList);
+                                        const pName = item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList);
                                         const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                         const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 

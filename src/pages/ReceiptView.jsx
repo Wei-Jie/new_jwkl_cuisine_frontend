@@ -164,7 +164,7 @@ export default function ReceiptView() {
                                      const iId = item.productId || item.product_id || '';
                                      return mId && iId && mId.toString().trim().toLowerCase() === iId.toString().trim().toLowerCase();
                                  });
-                                 const pName = getProductName(item.productId || item.product_id, menuList);
+                                 const pName = item.productName || item.product_name || getProductName(item.productId || item.product_id, menuList);
                                  const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                  const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
