@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, CheckCircle } from 'lucide-react';
-import { customFetch } from '../utils/helpers';
+import { customFetch, getProductName } from '../utils/helpers';
 
 export default function CustomerTrack() {
     const [phone, setPhone] = useState('');
@@ -174,7 +174,7 @@ export default function CustomerTrack() {
                                                 return (
                                                     <tr key={idx} style={{ borderBottom: '1px dashed #f2eee6' }}>
                                                         <td style={{ padding: '8px 0', color: '#2d2a26' }}>
-                                                            {menu?.name || item.productId || item.product_id}
+                                                            {getProductName(item.productId || item.product_id, menuList)}
                                                             {isWeight && item.productAmt > 0 && (
                                                                 <span style={{ fontSize: '11px', color: '#8c857b', marginLeft: '6px' }}>
                                                                     ({item.productAmt}g)

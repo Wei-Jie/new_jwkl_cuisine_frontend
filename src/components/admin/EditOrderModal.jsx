@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import ShareReceiptModal from './ShareReceiptModal';
+import { getProductName } from '../../utils/helpers';
 
 export default function EditOrderModal({
     show,
@@ -230,7 +231,7 @@ export default function EditOrderModal({
                                                     {isDiscount ? (
                                                         <strong style={{ color: 'var(--color-success)' }}>🎁 折扣折抵</strong>
                                                     ) : (
-                                                        <span>{menu?.name || item.productId || item.product_id}</span>
+                                                        <span>{getProductName(item.productId || item.product_id, menuList)}</span>
                                                     )}
                                                 </td>
                                                 <td data-label="單價 / 重量(g)">

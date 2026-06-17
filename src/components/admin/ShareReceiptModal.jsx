@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { getProductName } from '../../utils/helpers';
 
 export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, menuList }) {
     const canvasRef = useRef(null);
@@ -32,12 +33,8 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
         text += ` 🍽️ 訂購明細：\n`;
 
         items.forEach(item => {
-            const menu = menuList.find(m => {
-                const mId = m.productId || m.product_id || '';
-                const iId = item.productId || item.product_id || '';
-                return mId && iId && mId.toString().trim().toLowerCase() === iId.toString().trim().toLowerCase();
-            });
-            const pName = menu ? menu.name : (item.productId || item.product_id);
+            const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
+            const pName = getProductName(item.productId || item.product_id, menuList);
             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
             
             if (isDiscount) {
@@ -158,12 +155,8 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
         ctx.fillStyle = '#374151';
 
         items.forEach((item, index) => {
-            const menu = menuList.find(m => {
-                const mId = m.productId || m.product_id || '';
-                const iId = item.productId || item.product_id || '';
-                return mId && iId && mId.toString().trim().toLowerCase() === iId.toString().trim().toLowerCase();
-            });
-            const pName = (item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT') ? '🎁 折扣折抵' : (menu ? menu.name : (item.productId || item.product_id));
+            const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
+            const pName = getProductName(item.productId || item.product_id, menuList);
             const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
             const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
@@ -314,7 +307,7 @@ export default function ShareReceiptModal({ isOpen, onClose, order, orderItems, 
                                 <tbody>
                                     {items.map((item, idx) => {
                                         const menu = menuList.find(m => String(m.productId || m.product_id || '').trim().toLowerCase() === String(item.productId || item.product_id || '').trim().toLowerCase());
-                                        const pName = (item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT') ? '🎁 折扣折抵' : (menu ? menu.name : (item.productId || item.product_id));
+                                        const pName = getProductName(item.productId || item.product_id, menuList);
                                         const isDiscount = item.productId === 'PROD_DISCOUNT' || item.product_id === 'PROD_DISCOUNT';
                                         const isWeight = menu ? (String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(item.productId || item.product_id)) : false;
 
