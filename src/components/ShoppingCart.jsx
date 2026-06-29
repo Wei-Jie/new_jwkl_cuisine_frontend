@@ -59,7 +59,7 @@ export default function ShoppingCart({
 
                 // 查詢 SHIPPING_ENABLED 開關（公開端點，不需 API Key）
                 try {
-                    const seRes = await fetch('/api/v1/system-configs/public/SHIPPING_ENABLED');
+                    const seRes = await customFetch('/api/v1/system-configs/public/SHIPPING_ENABLED');
                     if (seRes.ok) {
                         const seData = await seRes.json();
                         setShippingEnabled(seData.value === 'true');
