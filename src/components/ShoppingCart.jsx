@@ -386,7 +386,7 @@ export default function ShoppingCart({
 
                                     <div className="form-group">
                                         <label className="form-label">
-                                            <FileText size={13} /> 備註 (特殊需求、水餃不加玉米、味精等)
+                                            <FileText size={13} /> 備註 (水餃不加玉米、味精等)
                                         </label>
                                         <textarea
                                             className="form-control text-area"
