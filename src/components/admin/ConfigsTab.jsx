@@ -85,6 +85,9 @@ const ConfigsTab = ({
     adminEnableCommunityComments,
     setAdminEnableCommunityComments,
     handleSaveCommunityComments,
+    adminShippingEnabled,
+    setAdminShippingEnabled,
+    handleSaveShippingEnabled,
     faqList,
     isConfigsLoading,
     editingFaqId,
@@ -300,6 +303,35 @@ const ConfigsTab = ({
                             💡 <b>防護機制說明：</b><br />
                             - 若選擇「緊急隱蔽」，前台導覽列將隱藏動態專區，且手動輸入網址也會被重定向回首頁。<br />
                             - 若選擇「緊急關閉」，前台動態將不提供留言表單，且後端 API 寫入亦會直接阻斷並回傳 403 錯誤。
+                        </small>
+                    </div>
+
+                    {/* 📦 配送功能開關 */}
+                    <div className="form-group" style={{ borderTop: '2px dashed #2563eb', paddingTop: '16px', marginTop: '8px' }}>
+                        <label className="form-label" style={{ color: '#1d4ed8', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            📦 配送與運費計算功能開關
+                        </label>
+                        <select
+                            className="form-control"
+                            value={adminShippingEnabled}
+                            onChange={(e) => setAdminShippingEnabled(e.target.value)}
+                            style={{ border: adminShippingEnabled === 'true' ? '1.5px solid #2563eb' : '1px solid var(--color-border)' }}
+                        >
+                            <option value="false">🔴 關閉（前台不顯示取貨方式選項）</option>
+                            <option value="true">🟢 開啟（前台顯示取貨方式、運費試算功能）</option>
+                        </select>
+                        <button
+                            className="btn btn-primary btn-sm"
+                            onClick={handleSaveShippingEnabled}
+                            style={{ marginTop: '6px', width: 'auto', backgroundColor: adminShippingEnabled === 'true' ? '#2563eb' : 'var(--color-primary)' }}
+                        >
+                            儲存配送功能設定
+                        </button>
+                        <small style={{ display: 'block', marginTop: '10px', fontSize: '11px', color: 'var(--color-text-secondary)', lineHeight: '1.4' }}>
+                            💡 <b>功能說明：</b><br />
+                            - 開啟後，顧客在購物車頁面將看到「取貨方式」選項（面交 / 黑貓宅配 / 7-11 店到店）。<br />
+                            - 關閉時，前台完全不顯示任何配送 UI，訂單流程維持原樣。<br />
+                            - 後台訂單管理的配送資訊欄位不受此開關影響，店主任何時候都可補填。
                         </small>
                     </div>
                 </div>

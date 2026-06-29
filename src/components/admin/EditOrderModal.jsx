@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import ShareReceiptModal from './ShareReceiptModal';
-import { getProductName } from '../../utils/helpers';
+import { getProductName, customFetch } from '../../utils/helpers';
 
 export default function EditOrderModal({
     show,
@@ -20,6 +20,68 @@ export default function EditOrderModal({
     onSave
 }) {
     const [showShareModal, setShowShareModal] = useState(false);
+    const [boxes, setBoxes] = useState([]);
+    const [recommendation, setRecommendation] = useState(null);
+    const [calcLoading, setCalcLoading] = useState(false);
+
+    useEffect(() => {
+        if (show) {
+            const fetchBoxes = async () => {
+                try {
+                    const res = await customFetch('/api/v1/shipping/boxes');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setBoxes(data);
+                    }
+                } catch (e) {
+                    console.error("無法取得箱型清單", e);
+                }
+            };
+            fetchBoxes();
+            setRecommendation(null);
+        }
+    }, [show]);
+
+    const runCalculation = async () => {
+        const carrier = editingOrder.shippingCarrier || editingOrder.shipping_carrier;
+        if (!carrier) {
+            alert("請先選擇物流商（黑貓或7-11）！");
+            return;
+        }
+        setCalcLoading(true);
+        try {
+            const res = await customFetch('/api/v1/shipping/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: editingOrder.order_id,
+                    carrier: carrier
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setRecommendation(data);
+            } else {
+                const err = await res.text();
+                alert("試算失敗：" + err);
+            }
+        } catch (e) {
+            alert("試算發生異常錯誤");
+        } finally {
+            setCalcLoading(false);
+        }
+    };
+
+    const applyRecommendation = () => {
+        if (!recommendation) return;
+        setEditingOrder({
+            ...editingOrder,
+            shippingBoxId: recommendation.recommendedBoxId,
+            shipping_box_id: recommendation.recommendedBoxId,
+            shippingFee: recommendation.suggestedFee,
+            shipping_fee: recommendation.suggestedFee
+        });
+    };
 
     if (!show || !editingOrder) return null;
 
@@ -191,6 +253,241 @@ export default function EditOrderModal({
                             onChange={(e) => setEditingOrder({ ...editingOrder, notes: e.target.value })} 
                             rows={2}
                         />
+                    </div>
+
+                    {/* 📦 配送與運費管理區塊 */}
+                    <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '16px', marginTop: '8px' }}>
+                        <h4 style={{ margin: '0 0 12px 0', color: 'var(--color-primary)' }}>📦 配送與運費設定</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                            <div className="form-group">
+                                <label className="form-label">取貨方式</label>
+                                <select
+                                    className="form-control"
+                                    value={editingOrder.shippingMethod || editingOrder.shipping_method || ''}
+                                    onChange={(e) => {
+                                        const method = e.target.value;
+                                        let carrier = null;
+                                        if (method === 'home_delivery') carrier = 'black_cat';
+                                        if (method === 'store_pickup') carrier = 'seven_eleven';
+                                        setEditingOrder({
+                                            ...editingOrder,
+                                            shippingMethod: method,
+                                            shipping_method: method,
+                                            shippingCarrier: carrier,
+                                            shipping_carrier: carrier,
+                                            // 清除其它無關的欄位
+                                            ...(method === 'face_to_face' ? { recipientAddress: '', recipient_address: '' } : {})
+                                        });
+                                        setRecommendation(null);
+                                    }}
+                                >
+                                    <option value="">-- 請選擇 --</option>
+                                    <option value="face_to_face">🤝 面交</option>
+                                    <option value="home_delivery">🚚 宅配</option>
+                                    <option value="store_pickup">🏪 店到店</option>
+                                </select>
+                            </div>
+
+                            {((editingOrder.shippingMethod || editingOrder.shipping_method) === 'home_delivery' ||
+                              (editingOrder.shippingMethod || editingOrder.shipping_method) === 'store_pickup') && (
+                                <>
+                                    <div className="form-group">
+                                        <label className="form-label">物流商</label>
+                                        <select
+                                            className="form-control"
+                                            value={editingOrder.shippingCarrier || editingOrder.shipping_carrier || ''}
+                                            onChange={(e) => {
+                                                setEditingOrder({
+                                                    ...editingOrder,
+                                                    shippingCarrier: e.target.value,
+                                                    shipping_carrier: e.target.value
+                                                });
+                                                setRecommendation(null);
+                                            }}
+                                        >
+                                            <option value="black_cat">🐱 黑貓冷凍宅配</option>
+                                            <option value="seven_eleven">🏪 7-11 冷凍店到店</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">貨運追蹤單號</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            value={editingOrder.trackingNumber || editingOrder.tracking_number || ''}
+                                            onChange={(e) => setEditingOrder({
+                                                ...editingOrder,
+                                                trackingNumber: e.target.value,
+                                                tracking_number: e.target.value
+                                            })}
+                                            placeholder="出貨後填寫"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {(editingOrder.shippingMethod || editingOrder.shipping_method) === 'face_to_face' && (
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">面交地點</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={editingOrder.storeName || editingOrder.store_name || ''}
+                                        onChange={(e) => setEditingOrder({
+                                            ...editingOrder,
+                                            storeName: e.target.value,
+                                            store_name: e.target.value
+                                        })}
+                                        placeholder="例如：安康麥當勞"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 配送詳細資訊 */}
+                        {((editingOrder.shippingMethod || editingOrder.shipping_method) === 'home_delivery' ||
+                          (editingOrder.shippingMethod || editingOrder.shipping_method) === 'store_pickup') && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: '12px', marginTop: '12px' }}>
+                                <div className="form-group">
+                                    <label className="form-label">收件人姓名</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={editingOrder.recipientName || editingOrder.recipient_name || ''}
+                                        onChange={(e) => setEditingOrder({
+                                            ...editingOrder,
+                                            recipientName: e.target.value,
+                                            recipient_name: e.target.value
+                                        })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">收件人電話</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={editingOrder.recipientPhone || editingOrder.recipient_phone || ''}
+                                        onChange={(e) => setEditingOrder({
+                                            ...editingOrder,
+                                            recipientPhone: e.target.value,
+                                            recipient_phone: e.target.value
+                                        })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">
+                                        {(editingOrder.shippingCarrier || editingOrder.shipping_carrier) === 'seven_eleven' ? '7-11 門市名稱' : '收件地址'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={(editingOrder.shippingCarrier || editingOrder.shipping_carrier) === 'seven_eleven'
+                                            ? (editingOrder.storeName || editingOrder.store_name || '')
+                                            : (editingOrder.recipientAddress || editingOrder.recipient_address || '')}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if ((editingOrder.shippingCarrier || editingOrder.shipping_carrier) === 'seven_eleven') {
+                                                setEditingOrder({ ...editingOrder, storeName: val, store_name: val });
+                                            } else {
+                                                setEditingOrder({ ...editingOrder, recipientAddress: val, recipient_address: val });
+                                            }
+                                        }}
+                                        placeholder={(editingOrder.shippingCarrier || editingOrder.shipping_carrier) === 'seven_eleven' ? '請輸入門市名稱' : '請輸入完整地址'}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 裝箱試算與運費選擇 */}
+                        {((editingOrder.shippingMethod || editingOrder.shipping_method) === 'home_delivery' ||
+                          (editingOrder.shippingMethod || editingOrder.shipping_method) === 'store_pickup') && (
+                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', marginTop: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>🤖 系統裝箱與運費試算建議</span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline btn-sm"
+                                        onClick={runCalculation}
+                                        disabled={calcLoading}
+                                        style={{ height: '28px', width: 'auto', fontSize: '12px', padding: '0 8px' }}
+                                    >
+                                        {calcLoading ? '🔄 計算中...' : '🔄 執行裝箱試算'}
+                                    </button>
+                                </div>
+
+                                {recommendation && (
+                                    <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span>建議箱型：<strong>{recommendation.recommendedBoxName}</strong></span>
+                                            <span>估計運費：<strong>${recommendation.suggestedFee} 元</strong></span>
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                            總點數：{recommendation.totalPoints} 點 | 總重量：{(recommendation.totalWeightG / 1000).toFixed(2)} kg
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: 'bold' }}>
+                                            ⚠️ 運費試算僅供參考，實際運費請以店家告知最終結果為主。
+                                        </div>
+                                        {recommendation.warnings && recommendation.warnings.map((w, idx) => (
+                                            <div key={idx} style={{ color: '#b45309', fontSize: '11px', display: 'flex', gap: '4px' }}>
+                                                ⚠️ {w}
+                                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary btn-sm"
+                                            onClick={applyRecommendation}
+                                            style={{ height: '26px', fontSize: '11px', width: 'auto', marginTop: '4px' }}
+                                        >
+                                            套用建議箱型與運費
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div className="form-group" style={{ margin: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '12px' }}>使用箱型選擇</label>
+                                        <select
+                                            className="form-control form-control-sm"
+                                            value={editingOrder.shippingBoxId || editingOrder.shipping_box_id || ''}
+                                            onChange={(e) => {
+                                                const boxId = e.target.value ? parseInt(e.target.value) : null;
+                                                const selectedBox = boxes.find(b => b.id === boxId);
+                                                setEditingOrder({
+                                                    ...editingOrder,
+                                                    shippingBoxId: boxId,
+                                                    shipping_box_id: boxId,
+                                                    shippingFee: selectedBox ? selectedBox.price : 0,
+                                                    shipping_fee: selectedBox ? selectedBox.price : 0
+                                                });
+                                            }}
+                                        >
+                                            <option value="">-- 請選擇箱型 --</option>
+                                            {boxes
+                                                .filter(b => b.carrier === (editingOrder.shippingCarrier || editingOrder.shipping_carrier))
+                                                .map(b => (
+                                                    <option key={b.id} value={b.id}>
+                                                        {b.name} (${b.price}元 / 容量上限:{b.maxPoints}點)
+                                                    </option>
+                                                ))
+                                            }
+                                        </select>
+                                    </div>
+                                    <div className="form-group" style={{ margin: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '12px' }}>最終運費 (可覆蓋)</label>
+                                        <input
+                                            type="number"
+                                            className="form-control form-control-sm"
+                                            value={editingOrder.shippingFee !== undefined && editingOrder.shippingFee !== null ? editingOrder.shippingFee : (editingOrder.shipping_fee || 0)}
+                                            onChange={(e) => setEditingOrder({
+                                                ...editingOrder,
+                                                shippingFee: parseInt(e.target.value) || 0,
+                                                shipping_fee: parseInt(e.target.value) || 0
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* 🍽️ 訂單品項明細表格 */}

@@ -28,7 +28,19 @@ export default function ShoppingCart({
     const [lineLink, setLineLink] = useState('https://line.me/ti/p/~wei750211');
     const [igLink, setIgLink] = useState('https://www.instagram.com/jwkl_cuisine/');
 
-    // 💡 動態載入 LINE 與 IG 聯絡連結
+    // 📦 配送功能開關狀態
+    const [shippingEnabled, setShippingEnabled] = useState(false);
+
+    // 🚚 取貨方式 state
+    const [pickupType, setPickupType] = useState('');        // 'face_to_face' | 'delivery'
+    const [faceOption, setFaceOption] = useState('');        // '安康麥當勞' | '安民街佳音' | 'other'
+    const [faceOtherText, setFaceOtherText] = useState(''); // 面交其他說明
+    const [deliveryCarrier, setDeliveryCarrier] = useState('');  // 'black_cat' | 'seven_eleven'
+    const [recipientName, setRecipientName] = useState('');
+    const [recipientPhone, setRecipientPhone] = useState('');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+
+    // 💡 動態載入 LINE、IG 聯絡連結與配送功能開關
     useEffect(() => {
         if (isOpen) {
             const fetchLinks = async () => {
@@ -43,6 +55,17 @@ export default function ShoppingCart({
                     }
                 } catch (e) {
                     console.error('載入社群聯絡連結失敗，啟用本地預設回退設定。', e);
+                }
+
+                // 查詢 SHIPPING_ENABLED 開關（公開端點，不需 API Key）
+                try {
+                    const seRes = await fetch('/api/v1/system-configs/public/SHIPPING_ENABLED');
+                    if (seRes.ok) {
+                        const seData = await seRes.json();
+                        setShippingEnabled(seData.value === 'true');
+                    }
+                } catch (e) {
+                    setShippingEnabled(false); // 失敗時預設關閉
                 }
             };
             fetchLinks();
@@ -85,12 +108,48 @@ export default function ShoppingCart({
             setValidationError('電子郵件格式不正確，請重新填寫！');
             return;
         }
-        
-        // 起訂金額防呆已被管理員要求取消
+
+        // 2. 配送防呆（僅在 SHIPPING_ENABLED=true 時執行）
+        if (shippingEnabled) {
+            if (!pickupType) { setValidationError('請選擇取貨方式！'); return; }
+            if (pickupType === 'face_to_face') {
+                if (!faceOption) { setValidationError('請選擇面交地點！'); return; }
+                if (faceOption === 'other' && !faceOtherText.trim()) { setValidationError('選擇「其他」面交時，請填寫面交地點說明！'); return; }
+            }
+            if (pickupType === 'delivery') {
+                if (!deliveryCarrier) { setValidationError('請選擇配送方式（黑貓或 7-11）！'); return; }
+                if (!deliveryAddress.trim()) { setValidationError('請填寫收件地址或門市名稱！'); return; }
+                if (!recipientName.trim()) { setValidationError('配送收件人姓名不得為空！'); return; }
+                if (!recipientPhone.trim()) { setValidationError('配送收件人電話不得為空！'); return; }
+            }
+        }
 
         setIsSubmitting(true);
         try {
-            // 組裝後端所需的送單 JSON payload (包含選填的社群資訊)
+            // 組裝配送資訊
+            let shippingPayload = {};
+            if (shippingEnabled) {
+                if (pickupType === 'face_to_face') {
+                    const storeName = faceOption === 'other' ? faceOtherText.trim() :
+                                      faceOption === '安康麥當勞' ? '安康麥當勞' : '安民街佳音';
+                    shippingPayload = {
+                        shipping_method: 'face_to_face',
+                        store_name: storeName
+                    };
+                } else if (pickupType === 'delivery') {
+                    shippingPayload = {
+                        shipping_method: deliveryCarrier === 'black_cat' ? 'home_delivery' : 'store_pickup',
+                        shipping_carrier: deliveryCarrier,
+                        recipient_name: recipientName.trim(),
+                        recipient_phone: recipientPhone.trim(),
+                        ...(deliveryCarrier === 'black_cat'
+                            ? { recipient_address: deliveryAddress.trim() }
+                            : { store_name: deliveryAddress.trim() })
+                    };
+                }
+            }
+
+            // 組裝後端所需的送單 JSON payload
             const orderPayload = {
                 customer_name: name.trim(),
                 phone: phone.trim(),
@@ -101,6 +160,7 @@ export default function ShoppingCart({
                 delivery_date: "",
                 notes: notes.trim(),
                 amount: totalAmount,
+                ...shippingPayload,
                 items: cart.flatMap(item => {
                     const isWeightItem = String(item.price).includes('*') || String(item.price).includes('重量') || ['P3001', 'P3002'].includes(item.product_id);
                     if (isWeightItem) {
@@ -135,6 +195,13 @@ export default function ShoppingCart({
             setEmail('');
             setDeliveryDate('');
             setNotes('');
+            setPickupType('');
+            setFaceOption('');
+            setFaceOtherText('');
+            setDeliveryCarrier('');
+            setRecipientName('');
+            setRecipientPhone('');
+            setDeliveryAddress('');
             onClearCart();
             onClose();
         } catch (err) {
@@ -329,6 +396,116 @@ export default function ShoppingCart({
                                             rows={2}
                                         />
                                     </div>
+
+                                    {/* 🚚 取貨方式（僅 SHIPPING_ENABLED=true 時顯示） */}
+                                    {shippingEnabled && (
+                                        <div className="form-group" style={{ borderTop: '2px solid var(--color-border)', paddingTop: '16px', marginTop: '4px' }}>
+                                            <label className="form-label" style={{ fontWeight: 'bold' }}>
+                                                📦 取貨方式 <span className="required">*</span>
+                                            </label>
+
+                                            {/* 第一層：面交 or 配送 */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                                                {/* === 面交選項 === */}
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: pickupType === 'face_to_face' ? 'bold' : 'normal' }}>
+                                                    <input type="radio" name="pickupType" value="face_to_face"
+                                                        checked={pickupType === 'face_to_face'}
+                                                        onChange={() => { setPickupType('face_to_face'); setDeliveryCarrier(''); setDeliveryAddress(''); setRecipientName(''); setRecipientPhone(''); }}
+                                                    />
+                                                    🤝 面交
+                                                </label>
+
+                                                {pickupType === 'face_to_face' && (
+                                                    <div style={{ marginLeft: '24px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                        {[['安康麥當勞', '🍔 安康麥當勞'], ['安民街佳音', '🏪 安民街佳音'], ['other', '📍 其他（請說明）']].map(([val, label]) => (
+                                                            <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                                <input type="radio" name="faceOption" value={val}
+                                                                    checked={faceOption === val}
+                                                                    onChange={() => setFaceOption(val)}
+                                                                />
+                                                                {label}
+                                                            </label>
+                                                        ))}
+                                                        {faceOption === 'other' && (
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm"
+                                                                placeholder="請填寫面交地點說明"
+                                                                value={faceOtherText}
+                                                                onChange={(e) => setFaceOtherText(e.target.value)}
+                                                                style={{ marginTop: '4px' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* === 配送選項 === */}
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: pickupType === 'delivery' ? 'bold' : 'normal' }}>
+                                                    <input type="radio" name="pickupType" value="delivery"
+                                                        checked={pickupType === 'delivery'}
+                                                        onChange={() => { setPickupType('delivery'); setFaceOption(''); setFaceOtherText(''); }}
+                                                    />
+                                                    🚚 配送
+                                                </label>
+
+                                                {pickupType === 'delivery' && (
+                                                    <div style={{ marginLeft: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {/* 配送方式 */}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            {[['black_cat', '🐱 黑貓低溫配送'], ['seven_eleven', '🏪 7-11 店到店冷凍']].map(([val, label]) => (
+                                                                <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                                    <input type="radio" name="deliveryCarrier" value={val}
+                                                                        checked={deliveryCarrier === val}
+                                                                        onChange={() => { setDeliveryCarrier(val); setDeliveryAddress(''); }}
+                                                                    />
+                                                                    {label}
+                                                                </label>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* 配送提示訊息 */}
+                                                        {deliveryCarrier && (
+                                                            <div style={{ background: 'rgba(37,99,235,0.08)', border: '1px solid rgba(37,99,235,0.25)', borderRadius: '8px', padding: '10px 12px', fontSize: '12px', color: '#1d4ed8', lineHeight: '1.5' }}>
+                                                                📦 <b>請填寫真實姓名及聯絡電話</b>，以利門市／宅配領取包裹。<br />
+                                                                 <span style={{ color: '#dc2626', fontWeight: '700', fontSize: '11px', display: 'block', marginTop: '4px' }}>⚠️ 運費試算僅供參考，實際運費請以店家告知最終結果為主。</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* 地址/門市名稱 */}
+                                                        {deliveryCarrier && (
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm"
+                                                                placeholder={deliveryCarrier === 'black_cat' ? '請填寫完整宅配收件地址' : '請填寫 7-11 門市名稱（如：台北安和門市）'}
+                                                                value={deliveryAddress}
+                                                                onChange={(e) => setDeliveryAddress(e.target.value)}
+                                                            />
+                                                        )}
+
+                                                        {/* 收件人資訊 */}
+                                                        {deliveryCarrier && (
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-sm"
+                                                                    placeholder="收件人姓名 *"
+                                                                    value={recipientName}
+                                                                    onChange={(e) => setRecipientName(e.target.value)}
+                                                                />
+                                                                <input
+                                                                    type="tel"
+                                                                    className="form-control form-control-sm"
+                                                                    placeholder="收件人電話 *"
+                                                                    value={recipientPhone}
+                                                                    onChange={(e) => setRecipientPhone(e.target.value)}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {validationError && (
                                         <div className="cart-validation-error">

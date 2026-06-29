@@ -144,6 +144,29 @@ export function AddMenuModal({
                             onChange={(e) => setNewMenuForm({ ...newMenuForm, pureNote: e.target.value })}
                         />
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div className="form-group">
+                            <label className="form-label">配送點數 (體積, 秤重商品留空)</label>
+                            <input 
+                                type="number" 
+                                className="form-control" 
+                                value={newMenuForm.shippingPoints}
+                                onChange={(e) => setNewMenuForm({ ...newMenuForm, shippingPoints: e.target.value })}
+                                placeholder="如: 3"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">商品重量 (g, 秤重商品留空)</label>
+                            <input 
+                                type="number" 
+                                className="form-control" 
+                                value={newMenuForm.weightG}
+                                onChange={(e) => setNewMenuForm({ ...newMenuForm, weightG: e.target.value })}
+                                placeholder="如: 500"
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label className="form-label">商品描述</label>
                         <textarea 
@@ -380,6 +403,29 @@ export function EditMenuModal({
                             onChange={(e) => setEditingProduct({ ...editingProduct, pureNote: e.target.value })}
                         />
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div className="form-group">
+                            <label className="form-label">配送點數 (體積, 秤重商品留空)</label>
+                            <input 
+                                type="number" 
+                                className="form-control" 
+                                value={editingProduct.shippingPoints || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, shippingPoints: e.target.value })}
+                                placeholder="如: 3"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">商品重量 (g, 秤重商品留空)</label>
+                            <input 
+                                type="number" 
+                                className="form-control" 
+                                value={editingProduct.weightG || ''}
+                                onChange={(e) => setEditingProduct({ ...editingProduct, weightG: e.target.value })}
+                                placeholder="如: 500"
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label className="form-label">商品描述</label>
                         <textarea

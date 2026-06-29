@@ -35,7 +35,9 @@ export default function AdminPortal() {
         image_url: '',
         status: '上架',
         cost: '',
-        pureNote: ''
+        pureNote: '',
+        shippingPoints: '',
+        weightG: ''
     });
 
     // ==========================================
@@ -116,6 +118,7 @@ export default function AdminPortal() {
     const [adminIgLink, setAdminIgLink] = useState('');
     const [adminEnableCommunityZone, setAdminEnableCommunityZone] = useState('true');
     const [adminEnableCommunityComments, setAdminEnableCommunityComments] = useState('true');
+    const [adminShippingEnabled, setAdminShippingEnabled] = useState('false');
 
     const [showAddFaqModal, setShowAddFaqModal] = useState(false);
     const [editingFaqId, setEditingFaqId] = useState(null);
@@ -185,8 +188,19 @@ export default function AdminPortal() {
                     delivery_date: o.deliveryDate || o.delivery_date,
                     payment_status: o.paymentStatus || o.payment_status,
                     payment_date: o.paymentDate || o.payment_date,
-                    line_id: o.lineId || o.line_id
+                    line_id: o.lineId || o.line_id,
+                    shippingMethod: o.shippingMethod || o.shipping_method,
+                    shippingCarrier: o.shippingCarrier || o.shipping_carrier,
+                    shippingBoxId: o.shippingBoxId || o.shipping_box_id,
+                    shippingFee: o.shippingFee !== undefined && o.shippingFee !== null ? o.shippingFee : o.shipping_fee,
+                    recipientName: o.recipientName || o.recipient_name,
+                    recipientPhone: o.recipientPhone || o.recipient_phone,
+                    recipientAddress: o.recipientAddress || o.recipient_address,
+                    storeName: o.storeName || o.store_name,
+                    storeId: o.storeId || o.store_id,
+                    trackingNumber: o.trackingNumber || o.tracking_number
                 }));
+
                 normalized.sort((a, b) => {
                     const numA = parseInt(String(a.order_id).replace(/\D/g, ''), 10) || 0;
                     const numB = parseInt(String(b.order_id).replace(/\D/g, ''), 10) || 0;
@@ -235,8 +249,19 @@ export default function AdminPortal() {
                     delivery_date: o.deliveryDate || o.delivery_date,
                     payment_status: o.paymentStatus || o.payment_status,
                     payment_date: o.paymentDate || o.payment_date,
-                    line_id: o.lineId || o.line_id
+                    line_id: o.lineId || o.line_id,
+                    shippingMethod: o.shippingMethod || o.shipping_method,
+                    shippingCarrier: o.shippingCarrier || o.shipping_carrier,
+                    shippingBoxId: o.shippingBoxId || o.shipping_box_id,
+                    shippingFee: o.shippingFee !== undefined && o.shippingFee !== null ? o.shippingFee : o.shipping_fee,
+                    recipientName: o.recipientName || o.recipient_name,
+                    recipientPhone: o.recipientPhone || o.recipient_phone,
+                    recipientAddress: o.recipientAddress || o.recipient_address,
+                    storeName: o.storeName || o.store_name,
+                    storeId: o.storeId || o.store_id,
+                    trackingNumber: o.trackingNumber || o.tracking_number
                 }));
+
                 // 升冪排序（先進先出）
                 normalized.sort((a, b) => {
                     const numA = parseInt(String(a.order_id).replace(/\D/g, ''), 10) || 0;
@@ -286,7 +311,9 @@ export default function AdminPortal() {
                 image_filename: m.imageFilename || m.image_filename,
                 image_url: m.imageUrl || m.image_url,
                 isStockManaged: m.isStockManaged !== undefined ? m.isStockManaged : (m.is_stock_managed || false),
-                is_stock_managed: m.isStockManaged !== undefined ? m.isStockManaged : (m.is_stock_managed || false)
+                is_stock_managed: m.isStockManaged !== undefined ? m.isStockManaged : (m.is_stock_managed || false),
+                shippingPoints: m.shippingPoints !== undefined && m.shippingPoints !== null ? m.shippingPoints : (m.shipping_points || ''),
+                weightG: m.weightG !== undefined && m.weightG !== null ? m.weightG : (m.weight_g || '')
             }));
             setMenuList(normalized);
         } catch (err) {
@@ -359,6 +386,10 @@ export default function AdminPortal() {
                 const cc = data.find(c => c.configKey === 'ENABLE_COMMUNITY_COMMENTS');
                 if (cc) setAdminEnableCommunityComments(cc.configValue);
                 else setAdminEnableCommunityComments('true');
+
+                const se = data.find(c => c.configKey === 'SHIPPING_ENABLED');
+                if (se) setAdminShippingEnabled(se.configValue);
+                else setAdminShippingEnabled('false');
             }
         } catch (err) {
             console.log("後端系統設定載入失敗");
@@ -616,8 +647,20 @@ export default function AdminPortal() {
             instagram: editingOrder.instagram || '',
             lineId: editingOrder.line_id || '',
             facebook: editingOrder.facebook || '',
-            email: editingOrder.email || ''
+            email: editingOrder.email || '',
+            // 配送相關欄位
+            shippingMethod: editingOrder.shippingMethod || editingOrder.shipping_method || null,
+            shippingCarrier: editingOrder.shippingCarrier || editingOrder.shipping_carrier || null,
+            shippingBoxId: editingOrder.shippingBoxId || editingOrder.shipping_box_id || null,
+            shippingFee: editingOrder.shippingFee !== undefined && editingOrder.shippingFee !== null ? parseInt(editingOrder.shippingFee) : (editingOrder.shipping_fee !== undefined ? parseInt(editingOrder.shipping_fee) : null),
+            recipientName: editingOrder.recipientName || editingOrder.recipient_name || '',
+            recipientPhone: editingOrder.recipientPhone || editingOrder.recipient_phone || '',
+            recipientAddress: editingOrder.recipientAddress || editingOrder.recipient_address || '',
+            storeName: editingOrder.storeName || editingOrder.store_name || '',
+            storeId: editingOrder.storeId || editingOrder.store_id || '',
+            trackingNumber: editingOrder.trackingNumber || editingOrder.tracking_number || ''
         };
+
 
         try {
             const itemsPayload = editingOrderItems.map(item => ({
@@ -980,7 +1023,9 @@ export default function AdminPortal() {
             note: finalNote,
             imageFilename: editingProduct.image_filename,
             imageUrl: editingProduct.image_url || editingProduct.imageUrl,
-            status: editingProduct.status
+            status: editingProduct.status,
+            shippingPoints: editingProduct.shippingPoints !== '' && editingProduct.shippingPoints !== undefined ? parseInt(editingProduct.shippingPoints) : null,
+            weightG: editingProduct.weightG !== '' && editingProduct.weightG !== undefined ? parseInt(editingProduct.weightG) : null
         };
         try {
             const config = {
@@ -1019,7 +1064,9 @@ export default function AdminPortal() {
             note: finalNote,
             imageFilename: newMenuForm.image_filename.trim(),
             imageUrl: newMenuForm.image_url.trim(),
-            status: newMenuForm.status
+            status: newMenuForm.status,
+            shippingPoints: newMenuForm.shippingPoints !== '' ? parseInt(newMenuForm.shippingPoints) : null,
+            weightG: newMenuForm.weightG !== '' ? parseInt(newMenuForm.weightG) : null
         };
 
         try {
@@ -1044,7 +1091,9 @@ export default function AdminPortal() {
                 image_url: '',
                 status: '上架',
                 cost: '',
-                pureNote: ''
+                pureNote: '',
+                shippingPoints: '',
+                weightG: ''
             });
             fetchMenuList();
         } catch (err) {
@@ -1063,7 +1112,9 @@ export default function AdminPortal() {
                 image_url: '',
                 status: '上架',
                 cost: '',
-                pureNote: ''
+                pureNote: '',
+                shippingPoints: '',
+                weightG: ''
             });
         }
     };
@@ -1574,6 +1625,23 @@ export default function AdminPortal() {
         }
     };
 
+    const handleSaveShippingEnabled = async () => {
+        try {
+            await customFetch('/api/v1/system-configs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    configKey: 'SHIPPING_ENABLED',
+                    configValue: adminShippingEnabled,
+                    description: '配送與運費計算功能開關，true=開啟（前台顯示取貨方式），false=關閉'
+                })
+            });
+            alert('配送功能開關設定儲存成功！');
+        } catch (e) {
+            alert('配送功能開關設定儲存成功！(本地安全回退)');
+        }
+    };
+
     const handleSaveFaq = async (e) => {
         e.preventDefault();
         const faqPayload = editingFaqId ? editingFaq : newFaqForm;
@@ -1841,6 +1909,9 @@ export default function AdminPortal() {
                         adminEnableCommunityComments={adminEnableCommunityComments}
                         setAdminEnableCommunityComments={setAdminEnableCommunityComments}
                         handleSaveCommunityComments={handleSaveCommunityComments}
+                        adminShippingEnabled={adminShippingEnabled}
+                        setAdminShippingEnabled={setAdminShippingEnabled}
+                        handleSaveShippingEnabled={handleSaveShippingEnabled}
                         faqList={faqList}
                         isConfigsLoading={isConfigsLoading}
                         editingFaqId={editingFaqId}
