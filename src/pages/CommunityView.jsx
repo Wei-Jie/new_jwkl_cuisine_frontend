@@ -584,19 +584,28 @@ export default function CommunityView() {
                                             onClick={() => setSelectedPost(post)}
                                         >
                                             {images.length > 0 ? (
-                                                <>
-                                                    <img 
-                                                        src={images[0]} 
-                                                        alt="日常隨筆" 
-                                                        className="story-grid-image"
-                                                        loading="lazy"
-                                                    />
-                                                    {hasMultipleImages && (
-                                                        <div className="story-multiple-indicator" title="多張圖片">
-                                                            📑
+                                                <div className="story-card-inner">
+                                                    <div className="story-image-wrap">
+                                                        <img 
+                                                            src={images[0]} 
+                                                            alt="日常隨筆" 
+                                                            className="story-grid-image"
+                                                            loading="lazy"
+                                                        />
+                                                        {hasMultipleImages && (
+                                                            <div className="story-multiple-indicator" title="多張圖片">
+                                                                📑
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="story-grid-meta">
+                                                        <span className="story-meta-author">✍️ 闆娘隨筆</span>
+                                                        <div className="story-meta-stats">
+                                                            <span className="story-meta-views">👁️ {post.views || 0}</span>
+                                                            <span className="story-meta-date">{formatDateTime(post.createdAt).split(' ')[0]}</span>
                                                         </div>
-                                                    )}
-                                                </>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <div className="story-text-card">
                                                     <div className="story-text-preview">{post.content}</div>
