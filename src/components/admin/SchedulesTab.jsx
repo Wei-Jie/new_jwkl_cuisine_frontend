@@ -231,7 +231,9 @@ export default function SchedulesTab({
                                 const allStock = currentProductMenu.stock || 0;
                                 
                                 const resStock = orderItems.filter(item => {
-                                    if (item.productId !== currentProductMenu.productId && item.product_id !== currentProductMenu.productId) return false;
+                                    const itemId = item.productId || item.product_id;
+                                    const menuId = currentProductMenu.productId || currentProductMenu.product_id;
+                                    if (!itemId || !menuId || itemId !== menuId) return false;
                                     if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
                                     const parent = orders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                     if (!parent) return false;

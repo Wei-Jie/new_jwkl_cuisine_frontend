@@ -306,6 +306,7 @@ export default function AdminPortal() {
             const data = await res.json();
             const normalized = data.map(m => ({
                 ...m,
+                productId: m.productId || m.product_id,
                 product_id: m.productId || m.product_id,
                 min_qty: m.minQty || m.min_qty || 1,
                 image_filename: m.imageFilename || m.image_filename,
@@ -327,7 +328,7 @@ export default function AdminPortal() {
                 { product_id: 'PROD_007', category: '滷味', name: '紅燒肉(滷)', price: '240', min_qty: 1, description: '傳承老手藝紅燒燜滷，肥而不膩，入口即化。', image_filename: '紅燒肉(滷).jpg', status: '上架' },
                 { product_id: 'PROD_008', category: '滷味', name: '秘製牛腱', price: '2.5*重量', min_qty: 1, description: '精選澳洲牛腱，私房中藥慢燉，秤重計價更實在。', image_filename: '秘製牛腱.jpg', status: '上架' }
             ];
-            setMenuList(defaultMenu);
+            setMenuList(defaultMenu.map(m => ({ ...m, productId: m.product_id })));
         } finally {
             setIsMenuLoading(false);
         }
@@ -441,6 +442,44 @@ export default function AdminPortal() {
             fetchAdminConfigsAndFaqs();
         }
     }, [activeTab]);
+
+    // 偵測視窗喚醒/切換回本頁面時，自動重新載入最新資料，防範手機睡眠喚醒後的資料過期與快取異常
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                console.log("視窗已喚醒/切換回本頁面，自動重新整理所有後台資料...");
+                if (activeTab === 'orders') {
+                    fetchMenuList();
+                    fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
+                    fetchOrderItems();
+                } else if (activeTab === 'schedules') {
+                    fetchMenuList();
+                    fetchOrderItems();
+                    fetchAllOrders();
+                } else if (activeTab === 'menu') {
+                    fetchMenuList();
+                } else if (activeTab === 'expenses') {
+                    fetchExpenses();
+                } else if (activeTab === 'analytics') {
+                    fetchExpenses();
+                    fetchAllOrders();
+                    fetchOrderItems();
+                    fetchMenuList();
+                } else if (activeTab === 'inventory') {
+                    fetchMenuList();
+                    fetchOrderItems();
+                    fetchAllOrders();
+                } else if (activeTab === 'configs') {
+                    fetchAdminConfigsAndFaqs();
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [activeTab, filterStatus, filterStartDate, filterEndDate]);
 
     // ==========================================
     // 訂單管理 Tab 回調方法

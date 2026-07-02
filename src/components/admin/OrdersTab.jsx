@@ -226,12 +226,14 @@ export default function OrdersTab({
                         </thead>
                         <tbody>
                             {menuList
-                                .filter(m => m.productId !== 'PROD_DISCOUNT')
+                                .filter(m => (m.productId || m.product_id) !== 'PROD_DISCOUNT')
                                 .map(menu => {
+                                    const menuId = menu.productId || menu.product_id;
                                     const allStock = menu.stock || 0;
                                     
                                     const resStock = orderItems.filter(item => {
-                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        const itemId = item.productId || item.product_id;
+                                        const isMatch = menuId && itemId && itemId === menuId;
                                         if (!isMatch) return false;
                                         if (item.itemStatus !== '已完成' && item.item_status !== '已完成') return false;
                                         const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
@@ -240,10 +242,11 @@ export default function OrdersTab({
                                     }).reduce((sum, item) => sum + (parseInt(item.qty) || 0), 0);
                                     
                                     const freeStock = allStock - resStock;
-                                    const isWeight = String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(menu.productId);
+                                    const isWeight = String(menu.price).includes('*') || String(menu.price).includes('重量') || ['P3001', 'P3002'].includes(menuId);
                                     
                                     const totalDemand = orderItems.filter(item => {
-                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        const itemId = item.productId || item.product_id;
+                                        const isMatch = menuId && itemId && itemId === menuId;
                                         if (!isMatch) return false;
                                         const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
                                         return parent && parent.status === '已接單';
@@ -251,11 +254,12 @@ export default function OrdersTab({
                                         const q = parseFloat(item.qty) || 0;
                                         return sum + (isWeight && q > 10 ? 1 : q);
                                     }, 0);
-
+                                    
                                     if (totalDemand === 0) return null;
-
+                                    
                                     const itemPendingQty = orderItems.filter(item => {
-                                        const isMatch = item.productId === menu.productId || item.product_id === menu.productId;
+                                        const itemId = item.productId || item.product_id;
+                                        const isMatch = menuId && itemId && itemId === menuId;
                                         if (!isMatch) return false;
                                         if ((item.itemStatus || item.item_status) !== '待製作') return false;
                                         const parent = allOrders.find(o => o.order_id === item.orderId || o.order_id === item.order_id);
@@ -285,7 +289,7 @@ export default function OrdersTab({
                                     }
 
                                     return (
-                                        <tr key={menu.productId}>
+                                        <tr key={menu.productId || menu.product_id}>
                                             <td style={{ fontWeight: 'bold', color: '#1f2937' }}>{menu.name}</td>
                                             <td style={{ textAlign: 'center', color: '#4b5563' }}>{allStock}</td>
                                             <td style={{ textAlign: 'center', color: '#4b5563' }}>{resStock}</td>
