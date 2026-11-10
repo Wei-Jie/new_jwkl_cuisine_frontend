@@ -45,7 +45,7 @@ const InventoryTab = ({
                             <div>
                                 <strong>• 實體總庫存 (All Stock)</strong>
                                 <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                                    目前實際備料數量。僅在主訂單為「已出貨」或「已完成」時扣除。
+                                    目前實際備料數量。僅在主訂單為「已出貨」或「已結單」時扣除。
                                 </div>
                             </div>
                             <div>

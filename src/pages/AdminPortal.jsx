@@ -610,40 +610,32 @@ export default function AdminPortal() {
         const dbOrderStatus = dbOrder ? dbOrder.status : '待確認';
         
         if (dbOrderStatus !== '已出貨' && dbOrderStatus !== '已結單') {
-            // 計算淨新增已完成庫存需求 (比對舊明細的狀態與數量)
-            const itemDiffMap = {};
-            editingOrderItems.forEach(newItem => {
-                if (newItem.productId === 'PROD_DISCOUNT' || newItem.product_id === 'PROD_DISCOUNT') return;
-                const pId = newItem.productId || newItem.product_id;
-                const newStatus = newItem.itemStatus || newItem.item_status || '待製作';
-                const newQty = parseInt(newItem.qty) || 0;
-
-                // 尋找資料庫中對應的舊明細 (優先用 id 匹配，次用商品 ID 匹配)
-                const oldItem = dbOrderItems.find(oi => 
-                    (newItem.id && oi.id === newItem.id) || 
-                    (oi.productId === pId || oi.product_id === pId)
-                );
-
-                let itemDiff = 0;
-                if (newStatus === '已完成') {
-                    if (oldItem) {
-                        const oldStatus = oldItem.itemStatus || oldItem.item_status || '待製作';
-                        const oldQty = parseInt(oldItem.qty) || 0;
-                        if (oldStatus === '已完成') {
-                            // 本來就是已完成：只有在數量增加時，才需要比對增加的部分
-                            itemDiff = Math.max(0, newQty - oldQty);
-                        } else {
-                            // 本來不是已完成，現在變成已完成：需要完整數量的庫存
-                            itemDiff = newQty;
-                        }
-                    } else {
-                        // 新增的明細且狀態為已完成：需要完整數量的庫存
-                        itemDiff = newQty;
-                    }
+            // 計算淨新增已完成庫存需求 (按商品 ID 彙總比對新舊明細，防範同商品拆分成多筆明細時比對失準)
+            const oldCompletedMap = {};
+            dbOrderItems.forEach(oi => {
+                const pId = oi.productId || oi.product_id;
+                if (!pId || pId === 'PROD_DISCOUNT') return;
+                const oldStatus = oi.itemStatus || oi.item_status || '待製作';
+                if (oldStatus === '已完成') {
+                    oldCompletedMap[pId] = (oldCompletedMap[pId] || 0) + (parseInt(oi.qty) || 0);
                 }
-                
-                if (itemDiff > 0) {
-                    itemDiffMap[pId] = (itemDiffMap[pId] || 0) + itemDiff;
+            });
+
+            const newCompletedMap = {};
+            editingOrderItems.forEach(newItem => {
+                const pId = newItem.productId || newItem.product_id;
+                if (!pId || pId === 'PROD_DISCOUNT') return;
+                const newStatus = newItem.itemStatus || newItem.item_status || '待製作';
+                if (newStatus === '已完成') {
+                    newCompletedMap[pId] = (newCompletedMap[pId] || 0) + (parseInt(newItem.qty) || 0);
+                }
+            });
+
+            const itemDiffMap = {};
+            Object.keys(newCompletedMap).forEach(pId => {
+                const diff = Math.max(0, newCompletedMap[pId] - (oldCompletedMap[pId] || 0));
+                if (diff > 0) {
+                    itemDiffMap[pId] = diff;
                 }
             });
 
@@ -746,6 +738,7 @@ export default function AdminPortal() {
                 alert('訂單資訊與品項排程更新成功！' + upgradeMsg);
                 setShowEditOrderModal(false);
                 setEditingOrder(null);
+                fetchMenuList();
                 fetchOrdersWithFilters(filterStatus, filterStartDate, filterEndDate);
                 fetchOrderItems();
             } else {
@@ -1032,6 +1025,7 @@ export default function AdminPortal() {
             const upgradeMsg = formatUpgradeMessage(upgraded);
             alert('製作狀態異動儲存成功！' + upgradeMsg);
             await fetchSchedules(queriedProducts);
+            fetchMenuList();
             fetchOrderItems();
             fetchAllOrders();
         } catch (err) {
@@ -1063,6 +1057,8 @@ export default function AdminPortal() {
             imageFilename: editingProduct.image_filename,
             imageUrl: editingProduct.image_url || editingProduct.imageUrl,
             status: editingProduct.status,
+            stock: editingProduct.stock !== undefined && editingProduct.stock !== null ? parseInt(editingProduct.stock) : 0,
+            isStockManaged: editingProduct.isStockManaged !== undefined ? editingProduct.isStockManaged : (editingProduct.is_stock_managed || false),
             shippingPoints: editingProduct.shippingPoints !== '' && editingProduct.shippingPoints !== undefined ? parseInt(editingProduct.shippingPoints) : null,
             weightG: editingProduct.weightG !== '' && editingProduct.weightG !== undefined ? parseInt(editingProduct.weightG) : null
         };
