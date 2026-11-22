@@ -240,8 +240,8 @@ const CommunityTab = () => {
     };
 
     // 6. 儲存/發布文章
-    const handleSavePost = async (e) => {
-        e.preventDefault();
+    const handleSavePost = async (e, overrideStatus = null) => {
+        if (e && e.preventDefault) e.preventDefault();
         
         // STORY (日常隨筆) 可不用標題，其餘分類必填
         if (postForm.category !== 'STORY' && !postForm.title.trim()) {
@@ -259,9 +259,11 @@ const CommunityTab = () => {
 
         const joinedUrls = imageUrlList.filter(Boolean).join(',');
 
+        const finalStatus = overrideStatus || postForm.status;
+
         // 建立後端所需 Payload (包含駝峰與底線命名雙對齊以相容後端)
         const payload = {
-            title: postForm.category === 'STORY' ? '' : postForm.title.trim(),
+            title: postForm.title.trim(),
             content: postForm.content.trim(),
             category: postForm.category.toUpperCase(),
             coverImageUrl: joinedUrls,
@@ -269,7 +271,7 @@ const CommunityTab = () => {
             tags: postForm.tags.trim(),
             chapterNum: postForm.category === 'SERIAL' ? parseInt(postForm.chapterNum) || 0 : 0,
             chapter_num: postForm.category === 'SERIAL' ? parseInt(postForm.chapterNum) || 0 : 0,
-            status: postForm.status
+            status: finalStatus
         };
 
         try {
@@ -884,8 +886,15 @@ const CommunityTab = () => {
                                 />
                             </div>
 
-                            <div className="modal-footer" style={{ marginTop: '10px' }}>
-                                <button type="submit" className="btn btn-primary" disabled={isUploading}>儲存發布</button>
+                            <div className="modal-footer" style={{ marginTop: '10px', gap: '8px', flexWrap: 'wrap' }}>
+                                {postForm.status === 'DRAFT' ? (
+                                    <>
+                                        <button type="submit" className="btn btn-outline" disabled={isUploading}>💾 僅存草稿</button>
+                                        <button type="button" className="btn btn-primary" disabled={isUploading} onClick={(e) => handleSavePost(e, 'PUBLISHED')}>🚀 儲存並立即發布</button>
+                                    </>
+                                ) : (
+                                    <button type="submit" className="btn btn-primary" disabled={isUploading}>💾 儲存更新</button>
+                                )}
                                 <button type="button" className="btn btn-outline" onClick={() => setShowPostModal(false)} disabled={isUploading}>取消</button>
                             </div>
                         </form>
