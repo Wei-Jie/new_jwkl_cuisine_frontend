@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, MessageSquare, Edit, Trash2, Plus, Eye, EyeOff, Calendar } from 'lucide-react';
+import { X, MessageSquare, Edit, Trash2, Plus, Eye, EyeOff, Calendar, BookOpen, Copy, Check } from 'lucide-react';
 import { customFetch } from '../../utils/helpers';
+
+// 正規化菜色名稱（去除幾顆裝前綴、括號備註與空白，用於去重與比對 Serial 章節）
+const normalizeDishName = (name = '') => {
+    return String(name)
+        .replace(/^\d+顆裝/, '')
+        .replace(/[（(].*?[)）]/g, '')
+        .replace(/\s+/g, '')
+        .trim();
+};
+
+// 產生小灶 Serial 統一暖黃深夜食堂手繪封面 Prompt 範本
+const buildWarmCoverPrompt = (dishTitle = '小灶家常料理') => {
+    const cleanTitle = (dishTitle || '小灶家常料理').trim();
+    return `Warm, cozy late-night Taiwanese home kitchen ("Midnight Diner" mood) hand-painted watercolor and delicate ink-line illustration featuring "${cleanTitle}", served in rustic cream-white stoneware pottery with a subtle blue rim on a dark solid wood dining table, gentle rising steam, bathed in soft warm amber-yellow tungsten lamp light, subtle textured watercolor paper grain, nostalgic and heartwarming atmosphere, 1:1 square composition, no text, no watermark.`;
+};
 
 // 圖片壓縮為 WebP 並限制在 2MB 以內
 const compressAndConvertToWebP = (file) => {
@@ -67,6 +82,9 @@ const compressAndConvertToWebP = (file) => {
 const CommunityTab = () => {
     const [posts, setPosts] = useState([]);
     const [isPostsLoading, setIsPostsLoading] = useState(false);
+    const [menus, setMenus] = useState([]);
+    const [promptDishInput, setPromptDishInput] = useState('');
+    const [copiedPromptKey, setCopiedPromptKey] = useState('');
     
     // 編輯/新增 Modal 狀態
     const [showPostModal, setShowPostModal] = useState(false);
@@ -122,8 +140,22 @@ const CommunityTab = () => {
         }
     };
 
+    // 載入所有菜單（供 Serial 故事宇宙進度比對與待寫菜色目錄使用）
+    const fetchMenus = async () => {
+        try {
+            const res = await customFetch('/api/v1/menus');
+            if (res.ok) {
+                const data = await res.json();
+                setMenus(Array.isArray(data) ? data : []);
+            }
+        } catch (err) {
+            console.error("載入菜單資料失敗", err);
+        }
+    };
+
     useEffect(() => {
         fetchAllPosts();
+        fetchMenus();
     }, []);
 
     // 2. 顯示/隱藏留言面板並獲取留言
@@ -180,8 +212,8 @@ const CommunityTab = () => {
         }
     };
 
-    // 4. 新增或編輯文章 Modal 打開
-    const handleOpenPostModal = (post = null) => {
+    // 4. 新增或編輯文章 Modal 打開（支援帶入 preset 預設值，供待撰寫菜色一鍵開章）
+    const handleOpenPostModal = (post = null, preset = null) => {
         if (post) {
             setEditingPostId(post.id);
             setPostForm({
@@ -199,13 +231,13 @@ const CommunityTab = () => {
         } else {
             setEditingPostId(null);
             setPostForm({
-                title: '',
-                content: '',
-                category: 'STORY',
+                title: preset?.title || '',
+                content: preset?.content || '',
+                category: preset?.category || 'STORY',
                 coverImageUrl: '',
-                tags: '',
-                chapterNum: 0,
-                status: 'PUBLISHED'
+                tags: preset?.tags || '',
+                chapterNum: preset?.chapterNum ?? 0,
+                status: preset?.status || 'PUBLISHED'
             });
             setImageUrlList([]);
             setTempUrl('');
@@ -334,6 +366,57 @@ const CommunityTab = () => {
         }
     };
 
+    // 複製暖黃手繪封面 Prompt 輔助函式
+    const handleCopyPrompt = async (text, key) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedPromptKey(key);
+            setTimeout(() => setCopiedPromptKey(''), 2000);
+        } catch (err) {
+            console.error('複製失敗，改用 fallback:', err);
+            window.prompt('請手動複製以下生圖 Prompt：', text);
+        }
+    };
+
+    // Serial 故事宇宙進度與章節目錄計算
+    const serialPosts = posts
+        .filter(p => p.category === 'SERIAL')
+        .sort((a, b) => (Number(a.chapterNum) || 0) - (Number(b.chapterNum) || 0));
+
+    const publishedSerialCount = serialPosts.filter(p => p.status === 'PUBLISHED').length;
+    const draftSerialCount = serialPosts.filter(p => p.status === 'DRAFT').length;
+    const nextChapterNum = serialPosts.reduce((max, p) => Math.max(max, Number(p.chapterNum) || 0), 0) + 1;
+
+    // 依菜單名稱正規化去重（例如合併 30顆/60顆 水餃），並比對是否已有對應 Serial 章節
+    const uniqueMenuDishes = [];
+    const seenDishKeys = new Set();
+    menus.forEach(item => {
+        if (!item?.name) return;
+        const coreKey = normalizeDishName(item.name);
+        if (!coreKey || seenDishKeys.has(coreKey)) return;
+        seenDishKeys.add(coreKey);
+
+        const matchedPost = serialPosts.find(p => {
+            const normTitle = normalizeDishName(p.title || '');
+            return normTitle.includes(coreKey) || coreKey.includes(normTitle && normTitle.length >= 2 ? normTitle : '___');
+        });
+        uniqueMenuDishes.push({
+            id: item.productId || coreKey,
+            displayName: coreKey,
+            rawName: item.name,
+            category: item.category || '',
+            matchedPost: matchedPost || null
+        });
+    });
+
+    const pendingDishes = uniqueMenuDishes.filter(d => !d.matchedPost);
+    const coveredCount = uniqueMenuDishes.length - pendingDishes.length;
+    const progressPercent = uniqueMenuDishes.length > 0
+        ? Math.round((coveredCount / uniqueMenuDishes.length) * 100)
+        : 0;
+    const activePromptDish = promptDishInput.trim() || pendingDishes[0]?.displayName || '小灶家常料理';
+    const generatedPromptText = buildWarmCoverPrompt(activePromptDish);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* 上方標題與新增按鈕 */}
@@ -349,6 +432,141 @@ const CommunityTab = () => {
                 >
                     <Plus size={16} /> 發布新動態
                 </button>
+            </div>
+
+            {/* 📖 Serial 故事宇宙進度條、章節目錄與暖黃封面 Prompt 範本 */}
+            <div className="card" style={{ padding: '20px', backgroundColor: '#fffdf8', border: '1px solid #f3e5cc', borderLeft: '4px solid #d97706' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#92400e', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <BookOpen size={18} /> 小灶 Serial 故事宇宙進度與章節目錄
+                        </h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#78716c' }}>
+                            自動比對菜單獨立菜色（共 {uniqueMenuDishes.length} 道）：已寫入章節 {coveredCount} 道（已發布 {publishedSerialCount} 篇 / 草稿 {draftSerialCount} 篇）、待撰寫 {pendingDishes.length} 道
+                        </p>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: '800', color: '#b45309' }}>
+                        完成度 {progressPercent}%
+                    </div>
+                </div>
+
+                {/* 進度條 */}
+                <div style={{ width: '100%', height: '10px', backgroundColor: '#fde68a', borderRadius: '999px', overflow: 'hidden', marginBottom: '16px' }}>
+                    <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: '#d97706', transition: 'width 0.3s ease' }} />
+                </div>
+
+                {/* 章節目錄（已建立的 SERIAL 文章） */}
+                <div style={{ marginBottom: '14px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#57534e', marginBottom: '8px' }}>
+                        📚 現有連載章節目錄（點擊可編輯或切換草稿／發布）
+                    </div>
+                    {serialPosts.length === 0 ? (
+                        <div style={{ fontSize: '12px', color: '#a8a29e' }}>尚無故事連載章節</div>
+                    ) : (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {serialPosts.map(sp => (
+                                <button
+                                    key={sp.id}
+                                    type="button"
+                                    onClick={() => handleOpenPostModal(sp)}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '5px 10px',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        border: sp.status === 'PUBLISHED' ? '1px solid #bbf7d0' : '1px dashed #fdba74',
+                                        backgroundColor: sp.status === 'PUBLISHED' ? '#f0fdf4' : '#fff7ed',
+                                        color: sp.status === 'PUBLISHED' ? '#166534' : '#9a3412'
+                                    }}
+                                    title="點擊編輯此章節"
+                                >
+                                    <span>Ch.{sp.chapterNum || 0}</span>
+                                    <span>{sp.title || '未命名章節'}</span>
+                                    <span style={{ fontSize: '10px', opacity: 0.85 }}>
+                                        {sp.status === 'PUBLISHED' ? '● 已發布' : '○ 草稿'}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* 待撰寫菜色一鍵開章 */}
+                {pendingDishes.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '700', color: '#57534e', marginBottom: '8px' }}>
+                            ✍️ 待撰寫菜色（點擊一鍵開新草稿，自動帶入「第 {nextChapterNum} 章」）
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {pendingDishes.map(dish => (
+                                <button
+                                    key={dish.id}
+                                    type="button"
+                                    onClick={() => {
+                                        setPromptDishInput(dish.displayName);
+                                        handleOpenPostModal(null, {
+                                            category: 'SERIAL',
+                                            title: dish.displayName,
+                                            chapterNum: nextChapterNum,
+                                            status: 'DRAFT',
+                                            tags: `小灶故事連載, ${dish.displayName}`
+                                        });
+                                    }}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        padding: '5px 10px',
+                                        borderRadius: '999px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        border: '1px solid #e7e5e4',
+                                        backgroundColor: '#ffffff',
+                                        color: '#44403c'
+                                    }}
+                                    title={`為「${dish.displayName}」建立第 ${nextChapterNum} 章草稿`}
+                                >
+                                    <Plus size={12} /> {dish.displayName}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 固定暖黃深夜食堂手繪封面 Prompt 範本 */}
+                <div style={{ padding: '12px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '800', color: '#92400e' }}>
+                            🎨 固定暖黃深夜食堂手繪封面 Prompt 範本（藍邊粗陶 × 深色木桌 × 琥珀微光）
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={promptDishInput}
+                                onChange={(e) => setPromptDishInput(e.target.value)}
+                                placeholder={`輸入菜色（預設：${pendingDishes[0]?.displayName || '小灶家常料理'}）`}
+                                style={{ width: '200px', height: '30px', fontSize: '12px', padding: '4px 8px' }}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handleCopyPrompt(generatedPromptText, 'panel')}
+                                style={{ height: '30px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px', width: 'auto' }}
+                            >
+                                {copiedPromptKey === 'panel' ? <><Check size={13} /> 已複製！</> : <><Copy size={13} /> 一鍵複製生圖 Prompt</>}
+                            </button>
+                        </div>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#78350f', fontFamily: 'monospace', backgroundColor: 'rgba(255,255,255,0.65)', padding: '8px', borderRadius: '6px', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                        {generatedPromptText}
+                    </div>
+                </div>
             </div>
 
             {/* 主要版面：左側文章列表，右側留言審查（當點選查看留言時） */}
@@ -871,6 +1089,27 @@ const CommunityTab = () => {
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+                                {postForm.category === 'SERIAL' && (
+                                    <div style={{ marginTop: '10px', padding: '10px 12px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: '700', color: '#92400e' }}>
+                                                🎨 本章暖黃手繪封面 Prompt（可直接複製生圖再上傳）
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline"
+                                                onClick={() => handleCopyPrompt(buildWarmCoverPrompt(postForm.title || '小灶家常料理'), 'modal')}
+                                                style={{ height: '28px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px', width: 'auto', backgroundColor: '#ffffff' }}
+                                            >
+                                                {copiedPromptKey === 'modal' ? <><Check size={12} /> 已複製！</> : <><Copy size={12} /> 複製此章 Prompt</>}
+                                            </button>
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: '#78350f', fontFamily: 'monospace', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                                            {buildWarmCoverPrompt(postForm.title || '小灶家常料理')}
+                                        </div>
                                     </div>
                                 )}
                             </div>
